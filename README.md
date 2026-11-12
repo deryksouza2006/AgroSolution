@@ -1,6 +1,6 @@
 # CitizenTech Mobile — Monitoramento agrícola
 
-Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. Além da arquitetura, autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo, a segunda etapa implementa o CRUD real de propriedades rurais.
+Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões e, na etapa 4, o Diário Agrícola real por talhão.
 
 ## Tecnologias
 
@@ -51,7 +51,9 @@ O `AuthContext` expõe `user`, `session`, `isLoading`, `isAuthenticated`, `hasSe
 - Tabs: Início, Propriedades, Monitoramento, Alertas e Perfil.
 - Início: boas-vindas e explicação desta etapa.
 - Propriedades: listagem paginada real, atualização por gesto, detalhe, cadastro, edição e exclusão com confirmação. O FarmsStack contém FarmList, FarmDetails, FarmCreate e FarmEdit; cadastro e edição compartilham o formulário.
-- Monitoramento e Alertas: mensagens informativas, sem consultas ou dados fictícios.
+- Monitoramento: listagem real paginada de todos os talhões, detalhes e formulário compartilhado para cadastro e edição. O CropAreasStack contém CropAreaList, CropAreaDetails, CropAreaCreate e CropAreaEdit.
+- No detalhe de uma propriedade, **Ver talhões** abre uma lista filtrada; seu cadastro já traz a propriedade selecionada. A edição permite transferir o talhão para outra propriedade do usuário, escolhida no seletor paginado de propriedades reais com o cache existente.
+- Alertas: mensagem informativa, sem consultas ou dados fictícios.
 - Perfil: nome, e-mail, papel, seletor de tema claro/escuro/sistema, Sobre o App e logout com confirmação.
 - Sobre o App: versão de `Constants.expoConfig`, referência de código limitada a 10 caracteres e tecnologias atuais/planejadas.
 - Contas `TECHNICIAN` e `ADMIN`: informação de interface ainda indisponível e opção de sair. A navegação de produtor não é montada para esses perfis.
@@ -70,7 +72,41 @@ Todas as operações usam o Axios e o JWT da sessão existente:
 | Editar | `PUT /api/farms/{id}` | 200, propriedade atualizada |
 | Excluir | `DELETE /api/farms/{id}` | 204, sem corpo |
 
-POST e PUT enviam exclusivamente `name`, `city`, `state`, `totalArea` e `areaUnit` (`HECTARE` ou `SQUARE_METER`). A área aceita vírgula ou ponto com até duas casas, sem separadores de milhar, arredondamento de entradas inválidas ou perda de precisão na conversão. A listagem busca somente a página selecionada; salvar/excluir invalida as listas e atualiza/remove o detalhe. Não há exclusão otimista nem repetição automática de mutations. Alterações não salvas pedem confirmação antes de voltar; falhas da API preservam o formulário. Respostas 404 indicam recurso indisponível, e 409 na exclusão explica o impedimento por talhões vinculados. O CRUD de talhões permanece fora desta entrega.
+POST e PUT enviam exclusivamente `name`, `city`, `state`, `totalArea` e `areaUnit` (`HECTARE` ou `SQUARE_METER`). A área aceita vírgula ou ponto com até duas casas, sem separadores de milhar, arredondamento de entradas inválidas ou perda de precisão na conversão. A listagem busca somente a página selecionada; salvar/excluir invalida as listas e atualiza/remove o detalhe. Não há exclusão otimista nem repetição automática de mutations. Alterações não salvas pedem confirmação antes de voltar; falhas da API preservam o formulário. Respostas 404 indicam recurso indisponível, e 409 na exclusão explica o impedimento por talhões vinculados.
+
+## Talhões / áreas de cultivo — endpoints integrados
+
+| Operação | Endpoint |
+| --- | --- |
+| Cadastrar | `POST /api/crop-areas` |
+| Listar todos | `GET /api/crop-areas?page=0&size=20` |
+| Listar por propriedade | `GET /api/farms/{farmId}/crop-areas?page=0&size=20` |
+| Detalhar | `GET /api/crop-areas/{id}` |
+| Editar / transferir | `PUT /api/crop-areas/{id}` |
+| Excluir | `DELETE /api/crop-areas/{id}` (204, sem corpo) |
+| Arquivar / reativar | `PATCH /api/crop-areas/{id}/archive` |
+
+POST e PUT enviam somente `farmId`, `name`, `cropType`, `areaSize`, `areaUnit`, `latitude`, `longitude` e `description`; coordenadas e descrição vazias são enviadas como `null`. Não são enviados status ou campos de proprietário. A área precisa ser positiva com até duas casas; coordenadas aceitam até seis, nos intervalos geográficos, sempre juntas ou ambas vazias. Vírgula ou ponto são aceitos, sem arredondar entradas inválidas. Status `NORMAL`, `ATTENTION` e `CRITICAL` são definidos exclusivamente pelo backend.
+
+As listas geral e filtrada carregam uma página por vez, mantêm arquivados visíveis e oferecem pull-to-refresh, retry e feedback de erro/vazio. Cards exibem cultivo, propriedade, área e badge com texto. Os detalhes incluem todos os campos e datas no fuso do dispositivo. O formulário preserva valores quando a API falha e confirma o descarte de alterações. Erro 409 ao salvar ou reativar cuja mensagem indica capacidade/área excedida recebe orientação específica; mensagens desconhecidas ficam como conflito genérico. A API é a autoridade para essa regra, inclusive após troca de propriedade ou unidade.
+
+Arquivar requer confirmação explícita e envia apenas `{ "archived": true }`; reativar envia `{ "archived": false }`. A resposta pode trazer o talhão atualizado; sem corpo, o detalhe é consultado novamente. Exclusão exige confirmação própria e não utiliza atualização otimista. Em DELETE 409, as mensagens exatas `Não é possível excluir área de cultivo com sensores vinculados` e `Cultivo com histórico deve ser arquivado` distinguem sensores de histórico. A primeira orienta excluir sensores antes; a segunda oferece arquivamento com **nova confirmação explícita**. Mensagens desconhecidas recebem erro genérico. Nenhum conflito arquiva automaticamente o cultivo, e o mobile segue a mensagem escolhida pelo backend, inclusive quando histórico é verificado antes de sensores.
+
+Todas as mutations invalidam as listas gerais/filtradas e as propriedades relacionadas; edição/transferência contempla origem e destino. Detalhes são atualizados ou removidos após sucesso. Mutations não têm retry automático e respostas de uma sessão encerrada não repovoam o cache. Respostas 401/403 usam o fluxo de autenticação existente; 404 exibem recurso indisponível e falhas de rede/5xx preservam dados disponíveis.
+
+## Diário Agrícola — etapa 4
+
+Nos detalhes do talhão, **Diário agrícola** abre a lista paginada, detalhes, cadastro, edição e exclusão confirmada. Cadastro/edição compartilham o formulário. Os tipos são Irrigação, Fertilização, Plantio e Colheita. Quantidade e unidade são opcionais, sempre juntas; quantidade positiva com até três casas, descrição até 2000 e unidade até 30 caracteres.
+
+- `POST /api/crop-areas/{cropAreaId}/activities`
+- `GET /api/crop-areas/{cropAreaId}/activities`
+- `GET /api/crop-areas/{cropAreaId}/activities/{activityId}`
+- `PUT /api/crop-areas/{cropAreaId}/activities/{activityId}`
+- `DELETE /api/crop-areas/{cropAreaId}/activities/{activityId}`
+
+A lista usa a Page Spring (`number`, não `page`), páginas de 20 itens (limite da API: 100), filtros opcionais `type`, `from`, `to` e ordenação `performedAt,desc`. O período cobre dias completos no fuso do dispositivo, convertidos para Instant UTC. O formulário separa data `DD/MM/AAAA` e horário `HH:mm` ou `HH:mm:ss`, valida o calendário e rejeita datas futuras e horários locais inexistentes por mudança de horário de verão. Horários repetidos seguem a primeira ocorrência definida pelo JavaScript; editar sem mudar a data/hora preserva o Instant original. Datas exibidas usam o fuso do dispositivo.
+
+Talhões arquivados permitem consulta, com aviso de somente leitura e orientação para reativar nos detalhes. O 409 `Cultivo arquivado: reative antes de alterar atividades` também atualiza esse estado se o arquivamento ocorrer enquanto o diário estiver aberto. Queries incluem talhão, página e filtros; mutations não têm retry e invalidam listas/detalhes relacionados, preservando os valores do formulário após erro. Foram acrescentados testes puros para quantidade/unidade, calendário, datas futuras, períodos e conversão UTC em diferentes fusos e transições de horário de verão. A experiência com teclado, navegação e API real ainda requer teste em dispositivo.
 
 ## Variáveis de ambiente
 
@@ -115,17 +151,21 @@ No celular, `localhost` aponta para o próprio aparelho e `10.0.2.2` é específ
 App.tsx
 src/
 ├── components/
+│   ├── cropAreas/      # Cards e status de talhões
+│   ├── farms/          # Cards e seletor paginado de propriedades
 │   ├── feedback/       # LoadingState, ErrorState e EmptyState
 │   └── navigation/     # AppHeader e BrandMark
 ├── contexts/           # AuthContext e ThemeContext
 ├── hooks/
-│   └── auth/           # useAuth, mutation e confirmação de logout
+│   ├── auth/           # useAuth, mutation e confirmação de logout
+│   ├── farms/          # CRUD de propriedades e query keys
+│   └── cropAreas/      # CRUD, arquivamento, query keys e invalidação
 ├── navigation/         # RootNavigator, AuthStack, ProducerStack e ProducerTabs
 ├── screens/
 │   ├── auth/
 │   ├── home/
 │   ├── farms/
-│   ├── monitoring/
+│   ├── cropAreas/
 │   ├── alerts/
 │   ├── profile/
 │   └── settings/
@@ -141,16 +181,15 @@ tests/                  # Validação de formulários e parser, sem serviços si
 ```bash
 npx expo install --check
 npx tsc --noEmit
-npx expo-doctor
-node --experimental-strip-types --test tests/auth-utils.test.mjs
+node --experimental-strip-types --test tests/*.test.mjs
 ```
 
 Não há script de lint configurado no projeto. Os testes utilitários usam Node.js 22, o TypeScript e o Axios já disponíveis, sem instalar um framework adicional. A validação completa de SecureStore, teclado, acessibilidade, navegação e autenticação depende de execução em Android/iOS e de uma API real implementando o contrato acima.
 
-Resultado da implementação: `expo install --check` e `tsc --noEmit` passaram; os cinco testes utilitários passaram. O Expo Doctor passou em 19/20 verificações e identificou a ausência da dependência direta `expo-font`, posteriormente instalada com `npx expo install expo-font`. Os três comandos finais foram executados uma única vez, conforme solicitado; portanto o Doctor não foi repetido após essa correção. Nenhum prebuild, build nativo ou commit foi executado.
+As verificações cobrem funções puras de autenticação, propriedades e talhões, incluindo validação numérica, coordenadas, traduções e classificação de conflitos de exclusão. Nesta etapa nenhuma dependência foi alterada; Expo Doctor, prebuild e build nativo não fazem parte das verificações.
 
 ## Módulos planejados
 
-Ainda **não implementados**: talhões, sensores, leituras, diário agrícola, dashboard real, alertas, RiskJob, IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
+Ainda **não implementados**: perfil agronômico, sensores, leituras, dashboard real, alertas, RiskJob, IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
 
 Documentação consultada: [Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/), [SecureStore](https://docs.expo.dev/versions/v58.0.0/sdk/securestore/), [temas](https://docs.expo.dev/develop/user-interface/color-themes/) e [autenticação com React Navigation](https://reactnavigation.org/docs/auth-flow/).

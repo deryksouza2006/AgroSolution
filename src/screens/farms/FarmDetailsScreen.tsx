@@ -60,6 +60,8 @@ export function FarmDetailsScreen({ navigation, route }: NativeStackScreenProps<
         </View>)}
       </View>
       {deleteError && <ErrorState title="Não foi possível excluir a propriedade" message={deleteError} />}
+      <AppButton title="Ver talhões" variant="secondary" disabled={deletion.isPending || deletion.isSuccess}
+        onPress={() => navigation.navigate('CropAreas', { screen: 'CropAreaList', params: { farmId: farm.id, farmName: farm.name } })} />
       <AppButton title="Editar" variant="secondary" disabled={deletion.isPending || deletion.isSuccess} onPress={() => navigation.navigate('FarmEdit', { id: farm.id })} />
       <AppButton title={deletion.isPending ? 'Excluindo…' : 'Excluir'} variant="danger" loading={deletion.isPending} disabled={deletion.isSuccess} onPress={confirmDelete} />
     </ScreenContainer>

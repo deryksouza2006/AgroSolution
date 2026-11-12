@@ -6,7 +6,7 @@ import { AppHeader } from '../components/navigation/AppHeader';
 import { useTheme } from '../hooks/useTheme';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { FarmsStack } from './FarmsStack';
-import { MonitoringScreen } from '../screens/monitoring/MonitoringScreen';
+import { CropAreasStack } from './CropAreasStack';
 import { AlertsScreen } from '../screens/alerts/AlertsScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import type { ProducerTabParamList } from '../types/navigation';
@@ -34,7 +34,7 @@ export function ProducerTabs() {
     })}>
       <Tabs.Screen name="Home" component={HomeScreen} options={{ title: 'Início' }} />
       <Tabs.Screen name="Farms" component={FarmsStack} options={{ title: 'Propriedades', headerShown: false }} />
-      <Tabs.Screen name="Monitoring" component={MonitoringScreen} options={{ title: 'Monitoramento' }} />
+      <Tabs.Screen name="Monitoring" component={CropAreasStack} options={{ title: 'Monitoramento', headerShown: false }} />
       <Tabs.Screen name="Alerts" component={AlertsScreen} options={{ title: 'Alertas' }} />
       <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: 'Perfil' }} />
     </Tabs.Navigator>

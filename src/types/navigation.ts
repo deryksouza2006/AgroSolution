@@ -6,11 +6,25 @@ export type FarmsStackParamList = {
   FarmDetails: { id: number };
   FarmCreate: undefined;
   FarmEdit: { id: number };
+  CropAreas: NavigatorScreenParams<CropAreasStackParamList>;
+};
+export type CropAreasStackParamList = {
+  CropAreaList: { farmId?: number; farmName?: string } | undefined;
+  CropAreaDetails: { id: number; listFarmId?: number };
+  CropAreaCreate: { farmId?: number } | undefined;
+  CropAreaEdit: { id: number; listFarmId?: number };
+  ActivityDiary: { cropAreaId: number; cropAreaName: string };
+};
+export type ActivitiesStackParamList = {
+  ActivityList: { cropAreaId: number; cropAreaName: string };
+  ActivityDetails: { cropAreaId: number; id: number };
+  ActivityCreate: { cropAreaId: number };
+  ActivityEdit: { cropAreaId: number; id: number };
 };
 export type ProducerTabParamList = {
   Home: undefined;
   Farms: NavigatorScreenParams<FarmsStackParamList> | undefined;
-  Monitoring: undefined;
+  Monitoring: NavigatorScreenParams<CropAreasStackParamList> | undefined;
   Alerts: undefined;
   Profile: undefined;
 };

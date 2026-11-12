@@ -4,6 +4,7 @@ import { useTheme } from '../hooks/useTheme';
 import { FarmListScreen } from '../screens/farms/FarmListScreen';
 import { FarmDetailsScreen } from '../screens/farms/FarmDetailsScreen';
 import { FarmFormScreen } from '../screens/farms/FarmFormScreen';
+import { CropAreasStack } from './CropAreasStack';
 import type { FarmsStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<FarmsStackParamList>();
@@ -20,6 +21,7 @@ export function FarmsStack() {
       <Stack.Screen name="FarmDetails" component={FarmDetailsScreen} options={{ title: 'Detalhes da propriedade' }} />
       <Stack.Screen name="FarmCreate" component={FarmFormScreen} options={{ title: 'Cadastrar propriedade' }} />
       <Stack.Screen name="FarmEdit" component={FarmFormScreen} options={{ title: 'Editar propriedade' }} />
+      <Stack.Screen name="CropAreas" component={CropAreasStack} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 }
