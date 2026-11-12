@@ -1,6 +1,8 @@
 import { createContext, useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { authService } from '../services/authService';
+import { api } from '../services/api';
 import { tokenStorage } from '../services/tokenStorage';
 import type { AuthResponse, AuthUser, Session, SignInInput, SignUpInput } from '../types/auth';
 import { AppError, isUnauthorized } from '../utils/errors';
@@ -15,6 +17,7 @@ interface AuthContextValue {
   signUp: (input: SignUpInput) => Promise<void>;
   signOut: () => Promise<void>;
   retrySessionRestore: () => Promise<void>;
+  isSessionCurrent: (expected: Session | null) => boolean;
 }
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const ME_KEY = ['auth', 'me'] as const;
@@ -28,6 +31,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const busy = useRef(false);
   const controller = useRef<AbortController | null>(null);
   const generation = useRef(0);
+  const currentSession = useRef<Session | null>(null);
+  const isSessionCurrent = useCallback((expected: Session | null) =>
+    mounted.current && !busy.current && expected !== null && currentSession.current === expected, []);
 
   const validateSession = useCallback(async (token: string, expiresAt: string | null, operation: number) => {
     queryClient.removeQueries({ queryKey: ME_KEY });
@@ -37,11 +43,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
       staleTime: 0,
       networkMode: 'always',
     });
-    if (mounted.current && operation === generation.current) setSession({ token, tokenType: 'Bearer', expiresAt, user });
+    if (mounted.current && operation === generation.current) {
+      const validated: Session = { token, tokenType: 'Bearer', expiresAt, user };
+      currentSession.current = validated;
+      setSession(validated);
+    }
   }, [queryClient]);
 
   const handleValidationFailure = useCallback(async (error: unknown, operation: number) => {
     if (!mounted.current || operation !== generation.current) return;
+    currentSession.current = null;
     setSession(null);
     queryClient.clear();
     if (isUnauthorized(error)) {
@@ -65,7 +76,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const token = await tokenStorage.get();
       if (!mounted.current || operation !== generation.current) return;
       if (token) await validateSession(token, null, operation);
-      else setSession(null);
+      else {
+        currentSession.current = null;
+        setSession(null);
+      }
     } catch (error: unknown) {
       await handleValidationFailure(error, operation);
     } finally {
@@ -81,6 +95,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     void retrySessionRestore();
     return () => {
       mounted.current = false;
+      currentSession.current = null;
       ++generation.current;
       busy.current = false;
       controller.current?.abort();
@@ -115,6 +130,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const signOut = useCallback(async () => {
     if (busy.current) throw new AppError('Aguarde a operação em andamento.');
     busy.current = true;
+    currentSession.current = null;
     const operation = ++generation.current;
     controller.current?.abort();
     setLoading(true);
@@ -140,9 +156,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }, [queryClient]);
 
+  useEffect(() => {
+    const interceptor = api.interceptors.response.use(response => response, (error: unknown) => {
+      if (isAxiosError(error) && isUnauthorized(error) && session && isSessionCurrent(session)) {
+        // Only expire the session responsible for this protected request.
+        const authorization = error.config?.headers?.Authorization;
+        if (authorization === `Bearer ${session.token}`) void signOut().catch(() => undefined);
+      }
+      return Promise.reject(error);
+    });
+    return () => api.interceptors.response.eject(interceptor);
+  }, [session, signOut, isSessionCurrent]);
+
   const value = useMemo(() => ({
     user: session?.user ?? null, session, isLoading, isAuthenticated: session !== null && !hasSessionRestoreError,
-    hasSessionRestoreError, signIn, signUp, signOut, retrySessionRestore,
-  }), [session, isLoading, hasSessionRestoreError, signIn, signUp, signOut, retrySessionRestore]);
+    hasSessionRestoreError, signIn, signUp, signOut, retrySessionRestore, isSessionCurrent,
+  }), [session, isLoading, hasSessionRestoreError, signIn, signUp, signOut, retrySessionRestore, isSessionCurrent]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

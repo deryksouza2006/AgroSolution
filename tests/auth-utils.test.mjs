@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { AxiosError } from 'axios';
-import { AppError, isUnauthorized, parseApiError } from '../src/utils/errors.ts';
+import { AppError, isUnauthorized, parseApiError, parseApiFieldErrors } from '../src/utils/errors.ts';
 import { validateAuthForm } from '../src/utils/validation.ts';
 
 const input = { name: 'Produtor', email: 'produtor@example.com', password: '12345678' };
@@ -52,4 +52,15 @@ test('raw payloads, diagnostics and malformed fields are never rendered', () => 
   }
   assert.doesNotMatch(parseApiError(new Error('private diagnostic')), /private/);
   assert.equal(parseApiError(new AppError('Configure a URL da API.')), 'Configure a URL da API.');
+});
+
+test('field parser extracts safe 400 validation messages without diagnostics', () => {
+  assert.deepEqual(parseApiFieldErrors(responseError(400, { fields: {
+    name: ['Nome obrigatório.', 'Use pelo menos 3 caracteres.'],
+    city: 'Cidade obrigatória.',
+    state: { trace: 'private diagnostic' },
+    totalArea: 'java.lang.IllegalArgumentException: private diagnostic',
+  } })), { name: 'Nome obrigatório.\nUse pelo menos 3 caracteres.', city: 'Cidade obrigatória.' });
+  assert.deepEqual(parseApiFieldErrors(responseError(500, { fields: { name: 'private diagnostic' } })), {});
+  assert.deepEqual(parseApiFieldErrors(new Error('private diagnostic')), {});
 });

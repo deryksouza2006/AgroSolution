@@ -1,6 +1,6 @@
 # CitizenTech Mobile — Monitoramento agrícola
 
-Primeira etapa do aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. Esta entrega estabelece a arquitetura, autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo.
+Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. Além da arquitetura, autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo, a segunda etapa implementa o CRUD real de propriedades rurais.
 
 ## Tecnologias
 
@@ -50,12 +50,27 @@ O `AuthContext` expõe `user`, `session`, `isLoading`, `isAuthenticated`, `hasSe
 - ProducerStack: Tabs e Sobre o App.
 - Tabs: Início, Propriedades, Monitoramento, Alertas e Perfil.
 - Início: boas-vindas e explicação desta etapa.
-- Propriedades, Monitoramento e Alertas: mensagens informativas, sem consultas ou dados fictícios.
+- Propriedades: listagem paginada real, atualização por gesto, detalhe, cadastro, edição e exclusão com confirmação. O FarmsStack contém FarmList, FarmDetails, FarmCreate e FarmEdit; cadastro e edição compartilham o formulário.
+- Monitoramento e Alertas: mensagens informativas, sem consultas ou dados fictícios.
 - Perfil: nome, e-mail, papel, seletor de tema claro/escuro/sistema, Sobre o App e logout com confirmação.
 - Sobre o App: versão de `Constants.expoConfig`, referência de código limitada a 10 caracteres e tecnologias atuais/planejadas.
 - Contas `TECHNICIAN` e `ADMIN`: informação de interface ainda indisponível e opção de sair. A navegação de produtor não é montada para esses perfis.
 
 O tema acompanha a StatusBar e a navegação. A preferência é salva em `citizentech_theme_preference`. Componentes compartilhados têm labels visíveis, mensagens textuais, áreas de toque de pelo menos 48 pontos para ações e suporte ao tamanho de fonte do dispositivo. Os formulários usam SafeAreaView e KeyboardAvoidingView.
+
+## Propriedades rurais — endpoints integrados
+
+Todas as operações usam o Axios e o JWT da sessão existente:
+
+| Operação | Endpoint | Sucesso |
+| --- | --- | --- |
+| Cadastrar | `POST /api/farms` | 201, propriedade criada |
+| Listar | `GET /api/farms?page=0&size=20` | 200, página de propriedades |
+| Detalhar | `GET /api/farms/{id}` | 200, propriedade |
+| Editar | `PUT /api/farms/{id}` | 200, propriedade atualizada |
+| Excluir | `DELETE /api/farms/{id}` | 204, sem corpo |
+
+POST e PUT enviam exclusivamente `name`, `city`, `state`, `totalArea` e `areaUnit` (`HECTARE` ou `SQUARE_METER`). A área aceita vírgula ou ponto com até duas casas, sem separadores de milhar, arredondamento de entradas inválidas ou perda de precisão na conversão. A listagem busca somente a página selecionada; salvar/excluir invalida as listas e atualiza/remove o detalhe. Não há exclusão otimista nem repetição automática de mutations. Alterações não salvas pedem confirmação antes de voltar; falhas da API preservam o formulário. Respostas 404 indicam recurso indisponível, e 409 na exclusão explica o impedimento por talhões vinculados. O CRUD de talhões permanece fora desta entrega.
 
 ## Variáveis de ambiente
 
@@ -136,6 +151,6 @@ Resultado da implementação: `expo install --check` e `tsc --noEmit` passaram; 
 
 ## Módulos planejados
 
-Ainda **não implementados**: propriedades, talhões, sensores, leituras, diário agrícola, dashboard real, alertas, RiskJob, IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
+Ainda **não implementados**: talhões, sensores, leituras, diário agrícola, dashboard real, alertas, RiskJob, IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
 
 Documentação consultada: [Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/), [SecureStore](https://docs.expo.dev/versions/v58.0.0/sdk/securestore/), [temas](https://docs.expo.dev/develop/user-interface/color-themes/) e [autenticação com React Navigation](https://reactnavigation.org/docs/auth-flow/).

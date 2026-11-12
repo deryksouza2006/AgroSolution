@@ -40,3 +40,16 @@ export function parseApiError(error: unknown): string {
   if (error.response.status >= 500) return 'O servidor está indisponível no momento. Tente novamente.';
   return 'Não foi possível concluir a operação. Verifique os dados e tente novamente.';
 }
+
+export function parseApiFieldErrors(error: unknown): Record<string, string> {
+  if (!axios.isAxiosError<unknown>(error) || error.response?.status !== 400) return {};
+  const data = error.response.data;
+  if (!record(data) || !record(data.fields)) return {};
+  const fields: Record<string, string> = {};
+  for (const [key, value] of Object.entries(data.fields)) {
+    const messages = (Array.isArray(value) ? value : [value])
+      .map(message).filter((item): item is string => item !== undefined);
+    if (messages.length) fields[key] = messages.slice(0, 2).join('\n');
+  }
+  return fields;
+}
