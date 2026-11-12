@@ -1,6 +1,6 @@
 # CitizenTech Mobile — Monitoramento agrícola
 
-Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões e, na etapa 4, o Diário Agrícola real por talhão.
+Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões, o Diário Agrícola, o perfil agronômico por talhão e, na etapa 6, o CRUD/transferência de sensores com consulta de saúde.
 
 ## Tecnologias
 
@@ -48,7 +48,7 @@ O `AuthContext` expõe `user`, `session`, `isLoading`, `isAuthenticated`, `hasSe
 
 - AuthStack: Login e Cadastro.
 - ProducerStack: Tabs e Sobre o App.
-- Tabs: Início, Propriedades, Monitoramento, Alertas e Perfil.
+- Tabs: Início, Propriedades, Monitoramento, Sensores, Alertas e Perfil.
 - Início: boas-vindas e explicação desta etapa.
 - Propriedades: listagem paginada real, atualização por gesto, detalhe, cadastro, edição e exclusão com confirmação. O FarmsStack contém FarmList, FarmDetails, FarmCreate e FarmEdit; cadastro e edição compartilham o formulário.
 - Monitoramento: listagem real paginada de todos os talhões, detalhes e formulário compartilhado para cadastro e edição. O CropAreasStack contém CropAreaList, CropAreaDetails, CropAreaCreate e CropAreaEdit.
@@ -107,6 +107,28 @@ Nos detalhes do talhão, **Diário agrícola** abre a lista paginada, detalhes, 
 A lista usa a Page Spring (`number`, não `page`), páginas de 20 itens (limite da API: 100), filtros opcionais `type`, `from`, `to` e ordenação `performedAt,desc`. O período cobre dias completos no fuso do dispositivo, convertidos para Instant UTC. O formulário separa data `DD/MM/AAAA` e horário `HH:mm` ou `HH:mm:ss`, valida o calendário e rejeita datas futuras e horários locais inexistentes por mudança de horário de verão. Horários repetidos seguem a primeira ocorrência definida pelo JavaScript; editar sem mudar a data/hora preserva o Instant original. Datas exibidas usam o fuso do dispositivo.
 
 Talhões arquivados permitem consulta, com aviso de somente leitura e orientação para reativar nos detalhes. O 409 `Cultivo arquivado: reative antes de alterar atividades` também atualiza esse estado se o arquivamento ocorrer enquanto o diário estiver aberto. Queries incluem talhão, página e filtros; mutations não têm retry e invalidam listas/detalhes relacionados, preservando os valores do formulário após erro. Foram acrescentados testes puros para quantidade/unidade, calendário, datas futuras, períodos e conversão UTC em diferentes fusos e transições de horário de verão. A experiência com teclado, navegação e API real ainda requer teste em dispositivo.
+
+## Perfil agronômico — etapa 5
+
+Nos detalhes do talhão, **Perfil agronômico** consulta `GET /api/crop-areas/{cropAreaId}/agronomic-profile` e mostra somente a revisão mais recente. GET 404 é um estado vazio com **Criar perfil**. O formulário compartilhado para criação/edição envia `PUT /api/crop-areas/{cropAreaId}/agronomic-profile`; cada salvamento cria uma revisão, exige confirmação explícita e preserva os valores preenchidos quando a API falha. O número exibido vem da resposta do servidor. Não há histórico de revisões nem exclusão, pois esses endpoints não existem.
+
+Percentuais são obrigatórios, de 0 a 100, com capacidade de campo maior que o ponto de murcha. Profundidades são opcionais e positivas; textura e fonte são obrigatórias. Os números aceitam vírgula ou ponto e são normalizados antes do envio, sem perda silenciosa de precisão. `demo` é sempre enviado como boolean, inclusive `false`; `true` exibe **Dados demonstrativos**. O PUT atualiza/invalida a query da revisão mais recente, sem retry automático. A consulta tem pull-to-refresh e botão de atualização; o formulário confirma o descarte de alterações. O mobile não bloqueia o perfil por arquivamento do talhão: segue a resposta da API. Teclado, acessibilidade, confirmações e o fluxo com API real ainda precisam de teste em dispositivo.
+
+## Sensores — etapa 6
+
+A aba **Sensores** oferece lista geral paginada, detalhes e formulário compartilhado de cadastro/edição. **Ver sensores**, nos detalhes do talhão, abre a lista filtrada e preenche o talhão no cadastro. Propriedades e talhões de destino são selecionados em listas reais paginadas; a edição permite transferência e alteração do status administrativo. Nenhuma restrição adicional é imposta a talhões arquivados.
+
+- `POST /api/sensors`
+- `GET /api/sensors?page=0&size=20`
+- `GET /api/crop-areas/{cropAreaId}/sensors?page=0&size=20`
+- `GET /api/sensors/{id}`
+- `PUT /api/sensors/{id}`
+- `DELETE /api/sensors/{id}`
+- `GET /api/sensors/{id}/health`
+
+O código do dispositivo é normalizado em maiúsculas, obrigatório no cadastro e pode ser omitido no PUT para preservar o atual. O POST nunca envia status. A data de instalação usa `DD/MM/AAAA` no formulário e `YYYY-MM-DD` no payload, sem conversão de fuso; datas futuras são rejeitadas. Campos vazios opcionais seguem o contrato. Conflitos 409 são classificados pelas duas mensagens exatas documentadas: código duplicado e exclusão impedida por leituras vinculadas; demais conflitos permanecem genéricos. Exclusão exige confirmação e não remove leituras nem outros recursos em cascata.
+
+A consulta `/health` ocorre somente no detalhe do sensor em foco, sem chamadas por card. Status administrativo, comunicação, saúde calculada, última leitura, bateria, calibração e manutenção são apresentados separadamente. A **política de saúde é demonstrativa**, sem diagnóstico real de hardware ou recálculo local; ausência de leituras preserva os estados retornados pela API. Datas com horário usam o fuso do dispositivo. Listas/detalhes/saúde e propriedades/talhões de origem e destino são atualizados ou invalidados após mutations, sem repetição automática. Formulários preservam valores após erro, impedem envio duplicado e confirmam descarte de alterações. Testes puros cobrem validação, data futura/local, código, traduções, conflitos e interpretação da saúde. Fluxos com API real, teclado, leitores de tela, fontes ampliadas e navegação ainda exigem teste em Android/iOS.
 
 ## Variáveis de ambiente
 
@@ -190,6 +212,6 @@ As verificações cobrem funções puras de autenticação, propriedades e talh�
 
 ## Módulos planejados
 
-Ainda **não implementados**: perfil agronômico, sensores, leituras, dashboard real, alertas, RiskJob, IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
+Ainda **não implementados**: device-key, entrada de IoT, leituras, dashboard real, alertas, RiskJob, IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
 
 Documentação consultada: [Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/), [SecureStore](https://docs.expo.dev/versions/v58.0.0/sdk/securestore/), [temas](https://docs.expo.dev/develop/user-interface/color-themes/) e [autenticação com React Navigation](https://reactnavigation.org/docs/auth-flow/).

@@ -14,6 +14,9 @@ export type CropAreasStackParamList = {
   CropAreaCreate: { farmId?: number } | undefined;
   CropAreaEdit: { id: number; listFarmId?: number };
   ActivityDiary: { cropAreaId: number; cropAreaName: string };
+  AgronomicProfile: { cropAreaId: number };
+  AgronomicProfileForm: { cropAreaId: number };
+  Sensors: NavigatorScreenParams<SensorsStackParamList>;
 };
 export type ActivitiesStackParamList = {
   ActivityList: { cropAreaId: number; cropAreaName: string };
@@ -25,8 +28,15 @@ export type ProducerTabParamList = {
   Home: undefined;
   Farms: NavigatorScreenParams<FarmsStackParamList> | undefined;
   Monitoring: NavigatorScreenParams<CropAreasStackParamList> | undefined;
+  Sensors: NavigatorScreenParams<SensorsStackParamList> | undefined;
   Alerts: undefined;
   Profile: undefined;
+};
+export type SensorsStackParamList = {
+  SensorList: { cropAreaId?: number; cropAreaName?: string } | undefined;
+  SensorDetails: { id: number; listCropAreaId?: number };
+  SensorCreate: { cropAreaId?: number } | undefined;
+  SensorEdit: { id: number; listCropAreaId?: number };
 };
 export type ProducerStackParamList = {
   Tabs: NavigatorScreenParams<ProducerTabParamList> | undefined;

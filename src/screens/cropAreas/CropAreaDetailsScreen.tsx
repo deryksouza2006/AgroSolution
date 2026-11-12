@@ -102,6 +102,10 @@ export function CropAreaDetailsScreen({ route, navigation }: NativeStackScreenPr
       </View>)}
     </View>
     {actionError && <ErrorState title="Não foi possível concluir a ação" message={actionError} />}
+    <AppButton title="Ver sensores" variant="secondary" disabled={pending || deletion.isSuccess}
+      onPress={() => navigation.navigate('Sensors', { screen: 'SensorList', params: { cropAreaId: area.id, cropAreaName: area.name } })} />
+    <AppButton title="Perfil agronômico" variant="secondary" disabled={pending || deletion.isSuccess}
+      onPress={() => navigation.navigate('AgronomicProfile', { cropAreaId: area.id })} />
     <AppButton title="Diário agrícola" variant="secondary" disabled={pending || deletion.isSuccess}
       onPress={() => navigation.navigate('ActivityDiary', { cropAreaId: area.id, cropAreaName: area.name })} />
     <AppButton title="Editar" variant="secondary" disabled={blocked} onPress={() => navigation.navigate('CropAreaEdit', { id: area.id, listFarmId: route.params.listFarmId })} />

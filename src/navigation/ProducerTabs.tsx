@@ -1,23 +1,24 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { useWindowDimensions } from 'react-native';
+import { Text, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeader } from '../components/navigation/AppHeader';
 import { useTheme } from '../hooks/useTheme';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { FarmsStack } from './FarmsStack';
 import { CropAreasStack } from './CropAreasStack';
+import { SensorsStack } from './SensorsStack';
 import { AlertsScreen } from '../screens/alerts/AlertsScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import type { ProducerTabParamList } from '../types/navigation';
 
 const Tabs = createBottomTabNavigator<ProducerTabParamList>();
 const icons: Record<keyof ProducerTabParamList, keyof typeof Ionicons.glyphMap> = {
-  Home: 'home-outline', Farms: 'business-outline', Monitoring: 'pulse-outline', Alerts: 'notifications-outline', Profile: 'person-outline',
+  Home: 'home-outline', Farms: 'business-outline', Monitoring: 'pulse-outline', Sensors: 'hardware-chip-outline', Alerts: 'notifications-outline', Profile: 'person-outline',
 };
 export function ProducerTabs() {
   const { theme } = useTheme();
-  const { fontScale } = useWindowDimensions();
+  const { fontScale, width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   return (
     <Tabs.Navigator screenOptions={({ route }) => ({
@@ -27,14 +28,16 @@ export function ProducerTabs() {
       tabBarLabelPosition: 'below-icon',
       tabBarAllowFontScaling: true,
       tabBarLabelStyle: { fontSize: 11, textAlign: 'center' },
+      tabBarLabel: ({ children, color }) => <Text style={{ color, fontSize: 11, textAlign: 'center', maxWidth: Math.max(40, (width - insets.left - insets.right) / 6 - 8) }}>{children}</Text>,
       tabBarItemStyle: { paddingVertical: theme.spacing.xs },
-      tabBarStyle: { height: Math.max(76, 48 + 28 * fontScale) + insets.bottom, backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
+      tabBarStyle: { height: Math.max(90, 48 + 42 * fontScale) + insets.bottom, backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
       tabBarIcon: ({ color, size }) => <Ionicons name={icons[route.name]} size={size} color={color} accessible={false} />,
       sceneStyle: { backgroundColor: theme.colors.background },
     })}>
       <Tabs.Screen name="Home" component={HomeScreen} options={{ title: 'Início' }} />
       <Tabs.Screen name="Farms" component={FarmsStack} options={{ title: 'Propriedades', headerShown: false }} />
       <Tabs.Screen name="Monitoring" component={CropAreasStack} options={{ title: 'Monitoramento', headerShown: false }} />
+      <Tabs.Screen name="Sensors" component={SensorsStack} options={{ title: 'Sensores', headerShown: false }} />
       <Tabs.Screen name="Alerts" component={AlertsScreen} options={{ title: 'Alertas' }} />
       <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: 'Perfil' }} />
     </Tabs.Navigator>

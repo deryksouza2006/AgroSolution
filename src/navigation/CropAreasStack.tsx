@@ -5,6 +5,9 @@ import { CropAreaListScreen } from '../screens/cropAreas/CropAreaListScreen';
 import { CropAreaDetailsScreen } from '../screens/cropAreas/CropAreaDetailsScreen';
 import { CropAreaFormScreen } from '../screens/cropAreas/CropAreaFormScreen';
 import { ActivitiesStack } from './ActivitiesStack';
+import { SensorsStack } from './SensorsStack';
+import { AgronomicProfileScreen } from '../screens/agronomicProfiles/AgronomicProfileScreen';
+import { AgronomicProfileFormScreen } from '../screens/agronomicProfiles/AgronomicProfileFormScreen';
 import type { CropAreasStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<CropAreasStackParamList>();
@@ -20,5 +23,8 @@ export function CropAreasStack() {
     <Stack.Screen name="CropAreaCreate" component={CropAreaFormScreen} options={{ title: 'Cadastrar talhão' }} />
     <Stack.Screen name="CropAreaEdit" component={CropAreaFormScreen} options={{ title: 'Editar talhão' }} />
     <Stack.Screen name="ActivityDiary" component={ActivitiesStack} options={{ headerShown: false }} />
+    <Stack.Screen name="Sensors" component={SensorsStack} options={{ headerShown: false }} />
+    <Stack.Screen name="AgronomicProfile" component={AgronomicProfileScreen} options={{ title: 'Perfil agronômico' }} />
+    <Stack.Screen name="AgronomicProfileForm" component={AgronomicProfileFormScreen} options={{ title: 'Dados do perfil agronômico' }} />
   </Stack.Navigator>;
 }
