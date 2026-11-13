@@ -1,17 +1,17 @@
 # CitizenTech Mobile — Monitoramento agrícola
 
-Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões, o Diário Agrícola, o perfil agronômico por talhão, o CRUD/transferência de sensores com consulta de saúde e, na etapa 7, as leituras reais dos sensores.
+Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões, o Diário Agrícola, o perfil agronômico por talhão, o CRUD/transferência de sensores com consulta de saúde, as leituras reais dos sensores e o dashboard da Home.
 
 ## Tecnologias
 
 - Node.js 22 e npm, com `package-lock.json` versionado.
-- Expo SDK 58 (`~58.0.24`), React Native 0.88.1, React 19.3 e TypeScript 6.
+- Expo SDK 58 (`~58.0.25`), React Native 0.88.1, React 19.3 e TypeScript 6.
 - React Navigation: native stack e bottom tabs, sem Expo Router.
 - TanStack Query e Axios.
 - Expo SecureStore, Constants, StatusBar, SystemUI e Font (dependência nativa dos ícones).
 - Safe Area Context, Screens e Vector Icons.
 
-As versões de Expo, React e React Native foram mantidas. Foram acrescentadas somente duas dependências necessárias: `expo-system-ui`, para o acompanhamento do tema do sistema também em builds Android, e `expo-font`, peer dependency obrigatória dos ícones. Não há Firebase, armazenamento de JWT em AsyncStorage nem dados simulados.
+O SDK 58 e as versões de React e React Native foram mantidos; na etapa 8, somente o patch do Expo foi atualizado para 58.0.25, conforme a checagem de compatibilidade. A base acrescentou somente duas dependências necessárias: `expo-system-ui`, para o acompanhamento do tema do sistema também em builds Android, e `expo-font`, peer dependency obrigatória dos ícones. Não há Firebase, armazenamento de JWT em AsyncStorage nem geração de dados simulados.
 
 ## Arquitetura
 
@@ -49,7 +49,7 @@ O `AuthContext` expõe `user`, `session`, `isLoading`, `isAuthenticated`, `hasSe
 - AuthStack: Login e Cadastro.
 - ProducerStack: Tabs e Sobre o App.
 - Tabs: Início, Propriedades, Monitoramento, Sensores, Alertas e Perfil.
-- Início: boas-vindas e explicação desta etapa.
+- Início: dashboard real com saudação, última atualização, contagens e resumos de talhões, alertas, sensores, atividades, leituras e processamentos.
 - Propriedades: listagem paginada real, atualização por gesto, detalhe, cadastro, edição e exclusão com confirmação. O FarmsStack contém FarmList, FarmDetails, FarmCreate e FarmEdit; cadastro e edição compartilham o formulário.
 - Monitoramento: listagem real paginada de todos os talhões, detalhes e formulário compartilhado para cadastro e edição. O CropAreasStack contém CropAreaList, CropAreaDetails, CropAreaCreate e CropAreaEdit.
 - No detalhe de uma propriedade, **Ver talhões** abre uma lista filtrada; seu cadastro já traz a propriedade selecionada. A edição permite transferir o talhão para outra propriedade do usuário, escolhida no seletor paginado de propriedades reais com o cache existente.
@@ -146,6 +146,12 @@ O formulário manual seleciona sensores reais ativos em páginas, verifica o tal
 
 Leituras são imutáveis, sem edição ou PUT. Exclusão requer confirmação e é impedida para `ANALYZED`, inclusive se o processamento mudar enquanto a tela estiver aberta. Os três conflitos documentados (talhão arquivado, sensor inativo e leitura já processada) têm orientação específica; mensagens desconhecidas permanecem genéricas. Cadastro/exclusão invalidam listas, última leitura e saúde do sensor, sem retry automático ou exclusão otimista. O formulário evita envio duplicado, preserva valores após erro e confirma descarte de alterações. Testes puros cobrem limites, tipos, chuva/intervalo, datas, normalização, traduções e 404 da última leitura. O TypeScript permite imports explícitos `.ts` para compartilhar os utilitários existentes também nos testes do Node, sem novas dependências.
 
+## Dashboard da Home — etapa 8
+
+A Home consulta somente `GET /api/dashboard`, usando Axios/JWT e TanStack Query existentes. Exibe totais de propriedades/talhões, leituras recentes e alertas abertos pelos metadados `totalElements`; sensores com problemas são contados na resposta limitada a 20. As seções não vazias mostram situação dos talhões, alertas, problemas nos sensores, atividades, leituras e processamentos pendentes/com falha. Riscos e métricas vêm exclusivamente do backend, sem recálculo ou diagnóstico profissional. Valores ausentes são identificados, e dados simulados/demonstrativos recebem avisos explícitos.
+
+O dashboard é somente leitura, com pull-to-refresh, botão de atualização e nova consulta ao retornar à Home pela política normal de cache, sem polling ou recriação da navegação. Itens inválidos e campos nulos são normalizados individualmente; falhas de atualização preservam os dados carregados. O conteúdo é virtualizado e os atalhos com identificadores válidos abrem apenas detalhes existentes de talhão/sensor/leitura ou diário. Não há telas ou ações de RiskJob/alertas, orientação por IA ou geração de dados simulados. Testes puros cobrem traduções, métricas opcionais, origem dos dados, contagens e respostas parciais. API real, navegação, refresh, fontes ampliadas e acessibilidade ainda exigem teste em Android/iOS.
+
 ## Variáveis de ambiente
 
 ```bash
@@ -224,10 +230,10 @@ node --experimental-strip-types --test tests/*.test.mjs
 
 Não há script de lint configurado no projeto. Os testes utilitários usam Node.js 22, o TypeScript e o Axios já disponíveis, sem instalar um framework adicional. A validação completa de SecureStore, teclado, acessibilidade, navegação e autenticação depende de execução em Android/iOS e de uma API real implementando o contrato acima.
 
-As verificações cobrem funções puras de autenticação, propriedades e talhões, incluindo validação numérica, coordenadas, traduções e classificação de conflitos de exclusão. Nesta etapa nenhuma dependência foi alterada; Expo Doctor, prebuild e build nativo não fazem parte das verificações.
+As verificações cobrem funções puras de autenticação e dos módulos agrícolas, incluindo validação numérica, coordenadas, datas, traduções, conflitos e normalização do dashboard. Na etapa 8, somente o patch do Expo foi atualizado para 58.0.25; nenhuma biblioteca nova foi adicionada. Expo Doctor, prebuild e build nativo não fazem parte das verificações.
 
 ## Módulos planejados
 
-Ainda **não implementados**: device-key, entrada de IoT (`/device-readings`), dashboard real, alertas, RiskJob, análise legada, IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
+Ainda **não implementados**: device-key, entrada de IoT (`/device-readings`), telas/ações de alertas e RiskJob, análise legada, orientação por IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
 
 Documentação consultada: [Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/), [SecureStore](https://docs.expo.dev/versions/v58.0.0/sdk/securestore/), [temas](https://docs.expo.dev/develop/user-interface/color-themes/) e [autenticação com React Navigation](https://reactnavigation.org/docs/auth-flow/).
