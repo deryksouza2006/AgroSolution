@@ -36,12 +36,14 @@ export function HomeScreen({ navigation }: BottomTabScreenProps<ProducerTabParam
       {dashboard && <>
         <DashboardDataNotice data={dashboard} />
         {dashboard.partial && <Text accessibilityLiveRegion="polite" style={[theme.typography.body, { color: theme.colors.textSecondary }]}>Algumas informações não foram fornecidas ou estão indisponíveis. Os dados válidos continuam sendo exibidos.</Text>}
-        <DashboardSummaryCards dashboard={dashboard} />
+        <DashboardSummaryCards dashboard={dashboard} onAlerts={() => navigation.navigate('Alerts', { screen: 'AlertList' })} />
         <Text style={[theme.typography.caption, { color: theme.colors.textSecondary }]}>As seções exibem até 20 itens por tipo. Riscos e indicadores são calculados pelo servidor e não substituem avaliação profissional.</Text>
       </>}
     </View>;
   return <ScreenContainer scrollable={false}>
     <DashboardFeed dashboard={dashboard} header={header} refreshing={query.isRefetching} onRefresh={refresh}
+      onAlert={jobId => { if (dashboardId(jobId)) navigation.navigate('Alerts', { screen: 'AlertDetails', params: { jobId }, initial: false }); }}
+      onJob={(jobId, cropAreaId) => { if (dashboardId(jobId)) navigation.navigate('Monitoring', { screen: 'RiskJobs', params: { jobId, ...(cropAreaId !== null ? { cropAreaId } : {}) }, initial: false }); }}
       onCrop={id => { if (dashboardId(id)) navigation.navigate('Monitoring', { screen: 'CropAreaDetails', params: { id }, initial: false }); }}
       onSensor={id => { if (dashboardId(id)) navigation.navigate('Sensors', { screen: 'SensorDetails', params: { id }, initial: false }); }}
       onReading={id => { if (dashboardId(id)) navigation.navigate('Sensors', { screen: 'Readings', params: { scope: { kind: 'all' }, readingId: id }, initial: false }); }}

@@ -18,6 +18,8 @@ function message(value: unknown): string | undefined {
   return text;
 }
 
+export { message as safeApiMessage };
+
 export function parseApiError(error: unknown): string {
   if (error instanceof AppError) return error.message;
   if (!axios.isAxiosError<unknown>(error)) return 'Não foi possível concluir a operação. Tente novamente.';

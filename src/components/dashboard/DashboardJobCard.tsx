@@ -5,9 +5,9 @@ import { formatDashboardDate } from '../../utils/dashboardFormatting';
 import { DashboardCard } from './DashboardCard';
 import { DashboardDataNotice, DashboardStatusBadge } from './DashboardBadges';
 
-export function DashboardJobCard({ job, cropName, alert = false, onPress }: { job: DashboardJob; cropName: string; alert?: boolean; onPress?: () => void }) {
+export function DashboardJobCard({ job, cropName, alert = false, onPress, actionLabel }: { job: DashboardJob; cropName: string; alert?: boolean; onPress?: () => void; actionLabel?: string }) {
   const { theme } = useTheme();
-  return <DashboardCard title={alert ? `Alerta · ${cropName}` : cropName} onPress={onPress}>
+  return <DashboardCard title={alert ? `Alerta · ${cropName}` : cropName} onPress={onPress} actionLabel={actionLabel}>
     <DashboardStatusBadge kind="job" value={job.status} />
     <DashboardDataNotice data={job} />
     <Text style={[theme.typography.body, { color: theme.colors.textSecondary }]}>Criado em: {formatDashboardDate(job.createdAt)}</Text>

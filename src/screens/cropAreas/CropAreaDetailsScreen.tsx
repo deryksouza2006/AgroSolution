@@ -6,6 +6,7 @@ import { AppButton } from '../../components/AppButton';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { CropAreaStatusBadge } from '../../components/cropAreas/CropAreaStatusBadge';
 import { LatestReadingSummary } from '../../components/readings/LatestReadingSummary';
+import { AnalyzeRiskButton } from '../../components/riskJobs/AnalyzeRiskButton';
 import { ErrorState } from '../../components/feedback/ErrorState';
 import { LoadingState } from '../../components/feedback/LoadingState';
 import { useArchiveCropArea } from '../../hooks/cropAreas/useArchiveCropArea';
@@ -105,6 +106,12 @@ export function CropAreaDetailsScreen({ route, navigation }: NativeStackScreenPr
       </View>)}
     </View>
     {actionError && <ErrorState title="Não foi possível concluir a ação" message={actionError} />}
+    <AnalyzeRiskButton cropAreaId={area.id} disabled={pending || deletion.isSuccess}
+      onCreated={jobId => navigation.navigate('RiskJobs', { cropAreaId: area.id, cropAreaName: area.name, jobId })} />
+    <AppButton title="Histórico de análises" variant="secondary" disabled={pending || deletion.isSuccess}
+      onPress={() => navigation.navigate('RiskJobs', { cropAreaId: area.id, cropAreaName: area.name })} />
+    <AppButton title="Alertas do talhão" variant="secondary" disabled={pending || deletion.isSuccess}
+      onPress={() => navigation.navigate('Alerts', { screen: 'AlertList', params: { cropAreaId: area.id, cropAreaName: area.name } })} />
     <LatestReadingSummary cropAreaId={area.id} enabled={focused && !pending && !deletion.isSuccess}
       onOpen={reading => navigation.navigate('Readings', { scope: { kind: 'cropArea', cropAreaId: area.id, cropAreaName: area.name }, readingId: reading.id })} />
     <AppButton title="Leituras do talhão" variant="secondary" disabled={pending || deletion.isSuccess}

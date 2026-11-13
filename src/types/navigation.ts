@@ -19,6 +19,8 @@ export type CropAreasStackParamList = {
   AgronomicProfileForm: { cropAreaId: number };
   Sensors: NavigatorScreenParams<SensorsStackParamList>;
   Readings: ReadingsEntryParams;
+  RiskJobs: RiskJobsEntryParams;
+  Alerts: NavigatorScreenParams<AlertsStackParamList>;
 };
 export type ActivitiesStackParamList = {
   ActivityList: { cropAreaId: number; cropAreaName: string };
@@ -31,7 +33,7 @@ export type ProducerTabParamList = {
   Farms: NavigatorScreenParams<FarmsStackParamList> | undefined;
   Monitoring: NavigatorScreenParams<CropAreasStackParamList> | undefined;
   Sensors: NavigatorScreenParams<SensorsStackParamList> | undefined;
-  Alerts: undefined;
+  Alerts: NavigatorScreenParams<AlertsStackParamList> | undefined;
   Profile: undefined;
 };
 export type SensorsStackParamList = {
@@ -46,6 +48,16 @@ export type ReadingsStackParamList = {
   ReadingList: { scope: ReadingScope };
   ReadingDetails: { id: number; scope: ReadingScope };
   ReadingCreate: { sensorId?: number; scope: ReadingScope };
+};
+export type RiskJobsEntryParams = { cropAreaId: number; cropAreaName?: string; jobId?: number } | { jobId: number; cropAreaId?: number; cropAreaName?: string };
+export type RiskJobsStackParamList = {
+  RiskJobList: { cropAreaId: number; cropAreaName?: string };
+  RiskJobDetails: { jobId: number; cropAreaId?: number };
+  Alerts: NavigatorScreenParams<AlertsStackParamList>;
+};
+export type AlertsStackParamList = {
+  AlertList: { cropAreaId?: number; cropAreaName?: string } | undefined;
+  AlertDetails: { jobId: number };
 };
 export type ProducerStackParamList = {
   Tabs: NavigatorScreenParams<ProducerTabParamList> | undefined;

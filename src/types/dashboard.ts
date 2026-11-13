@@ -1,7 +1,8 @@
 import type { MeasurementField, ReadingSource } from './reading';
+import type { JobStatus, RiskLevel } from './riskJob';
 
-export type DashboardRisk = 'NORMAL' | 'ATTENTION' | 'CRITICAL' | 'INSUFFICIENT_DATA';
-export type DashboardJobStatus = 'PENDING' | 'QUEUED' | 'PROCESSING' | 'FAILED' | 'COMPLETED_WITHOUT_AI' | 'COMPLETED';
+export type DashboardRisk = RiskLevel;
+export type DashboardJobStatus = JobStatus;
 export interface DashboardProvenance { source: ReadingSource | null; demo: boolean }
 export interface DashboardPage<T> {
   content: T[];

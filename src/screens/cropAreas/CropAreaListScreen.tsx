@@ -48,6 +48,7 @@ function CropAreaList({ navigation, route }: Props) {
         onRefresh={() => { if (!query.isFetching) void query.refetch(); }} tintColor={theme.colors.primary} colors={[theme.colors.primary]} />}
       ListHeaderComponent={<View style={{ gap: theme.spacing.lg }}>
         <AppButton title="Cadastrar talhão" onPress={() => navigation.navigate('CropAreaCreate', { farmId })} />
+        <AppButton title="Todos os alertas" variant="secondary" onPress={() => navigation.navigate('Alerts', { screen: 'AlertList' })} />
         <Text accessibilityRole="header" style={[theme.typography.title, { color: theme.colors.text }]}>{farmId === undefined ? 'Todos os talhões' : `Talhões de ${route.params?.farmName ?? 'sua propriedade'}`}</Text>
         <Text style={[theme.typography.body, { color: theme.colors.textSecondary }]}>Os talhões arquivados também aparecem nesta lista, identificados pelo status.</Text>
         {query.isError && <ErrorState message={parseCropAreaError(query.error)} onRetry={() => { void query.refetch(); }} />}

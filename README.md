@@ -1,6 +1,6 @@
 # CitizenTech Mobile — Monitoramento agrícola
 
-Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões, o Diário Agrícola, o perfil agronômico por talhão, o CRUD/transferência de sensores com consulta de saúde, as leituras reais dos sensores e o dashboard da Home.
+Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões, o Diário Agrícola, o perfil agronômico por talhão, o CRUD/transferência de sensores com consulta de saúde, as leituras reais dos sensores, o dashboard da Home, a análise determinística de risco hídrico com gerenciamento administrativo de alertas e a orientação contextual por IA vinculada às análises concluídas.
 
 ## Tecnologias
 
@@ -29,7 +29,7 @@ SafeAreaProvider
 
 O `QueryClient` é criado fora dos componentes. Queries fazem no máximo uma nova tentativa; erros 401/403 não são repetidos. Mutations não repetem requisições automaticamente. O foco da janela não dispara refetch e o logout cancela queries e limpa o cache. Credenciais não são persistidas; a mutation de autenticação é descartada após o envio ou desmontagem.
 
-O Axios possui uma única instância, timeout de 15 segundos e JSON como formato padrão. Seu interceptor lê o JWT do SecureStore e o envia como Bearer nas chamadas protegidas. Login e cadastro são públicos. Não há interceptor de repetição de requisições nem registro de tokens, senhas ou respostas sensíveis.
+O Axios possui uma única instância, timeout padrão de 15 segundos e JSON como formato padrão. Somente o POST de orientação usa timeout de 180 segundos. Seu interceptor lê o JWT do SecureStore e o envia como Bearer nas chamadas protegidas. Login e cadastro são públicos. Não há interceptor de repetição de requisições nem registro de tokens, senhas ou respostas sensíveis.
 
 ## Autenticação e proteção de rotas
 
@@ -53,7 +53,7 @@ O `AuthContext` expõe `user`, `session`, `isLoading`, `isAuthenticated`, `hasSe
 - Propriedades: listagem paginada real, atualização por gesto, detalhe, cadastro, edição e exclusão com confirmação. O FarmsStack contém FarmList, FarmDetails, FarmCreate e FarmEdit; cadastro e edição compartilham o formulário.
 - Monitoramento: listagem real paginada de todos os talhões, detalhes e formulário compartilhado para cadastro e edição. O CropAreasStack contém CropAreaList, CropAreaDetails, CropAreaCreate e CropAreaEdit.
 - No detalhe de uma propriedade, **Ver talhões** abre uma lista filtrada; seu cadastro já traz a propriedade selecionada. A edição permite transferir o talhão para outra propriedade do usuário, escolhida no seletor paginado de propriedades reais com o cache existente.
-- Alertas: mensagem informativa, sem consultas ou dados fictícios.
+- Alertas: lista geral real paginada, detalhe, reconhecimento e resolução administrativa confirmada. Também acessível pelo Monitoramento, pelo talhão e pelos cards da Home.
 - Perfil: nome, e-mail, papel, seletor de tema claro/escuro/sistema, Sobre o App e logout com confirmação.
 - Sobre o App: versão de `Constants.expoConfig`, referência de código limitada a 10 caracteres e tecnologias atuais/planejadas.
 - Contas `TECHNICIAN` e `ADMIN`: informação de interface ainda indisponível e opção de sair. A navegação de produtor não é montada para esses perfis.
@@ -150,7 +150,37 @@ Leituras são imutáveis, sem edição ou PUT. Exclusão requer confirmação e 
 
 A Home consulta somente `GET /api/dashboard`, usando Axios/JWT e TanStack Query existentes. Exibe totais de propriedades/talhões, leituras recentes e alertas abertos pelos metadados `totalElements`; sensores com problemas são contados na resposta limitada a 20. As seções não vazias mostram situação dos talhões, alertas, problemas nos sensores, atividades, leituras e processamentos pendentes/com falha. Riscos e métricas vêm exclusivamente do backend, sem recálculo ou diagnóstico profissional. Valores ausentes são identificados, e dados simulados/demonstrativos recebem avisos explícitos.
 
-O dashboard é somente leitura, com pull-to-refresh, botão de atualização e nova consulta ao retornar à Home pela política normal de cache, sem polling ou recriação da navegação. Itens inválidos e campos nulos são normalizados individualmente; falhas de atualização preservam os dados carregados. O conteúdo é virtualizado e os atalhos com identificadores válidos abrem apenas detalhes existentes de talhão/sensor/leitura ou diário. Não há telas ou ações de RiskJob/alertas, orientação por IA ou geração de dados simulados. Testes puros cobrem traduções, métricas opcionais, origem dos dados, contagens e respostas parciais. API real, navegação, refresh, fontes ampliadas e acessibilidade ainda exigem teste em Android/iOS.
+O dashboard é somente leitura, com pull-to-refresh, botão de atualização e nova consulta ao retornar à Home pela política normal de cache, sem polling ou recriação da navegação. Itens inválidos e campos nulos são normalizados individualmente; falhas de atualização preservam os dados carregados. O conteúdo é virtualizado e os atalhos com identificadores válidos abrem detalhes de talhão/sensor/leitura, diário e análises/alertas. A solicitação de orientação fica nos detalhes, sem geração de dados simulados. Testes puros cobrem traduções, métricas opcionais, origem dos dados, contagens e respostas parciais. API real, navegação, refresh, fontes ampliadas e acessibilidade ainda exigem teste em Android/iOS.
+
+## Risco hídrico e alertas — etapa 9
+
+O detalhe do talhão oferece **Analisar risco hídrico**, **Histórico de análises** e **Alertas do talhão**. O POST é enviado sem payload, sem retry automático; o JSON retornado com HTTP 202 fornece o único `id` usado para abrir o detalhe e consultar o processamento. Histórico e alertas usam páginas Spring (`number`), com 20 itens por página, refresh e preservação dos últimos dados em falhas de rede.
+
+- `POST /api/crop-areas/{cropAreaId}/risk-jobs`
+- `GET /api/risk-jobs/{jobId}`
+- `GET /api/crop-areas/{cropAreaId}/risk-jobs?page=0&size=20`
+- `GET /api/alerts?page=0&size=20`
+- `GET /api/alerts/{jobId}`
+- `GET /api/crop-areas/{cropAreaId}/alerts?page=0&size=20`
+- `PATCH /api/alerts/{jobId}/acknowledge` (sem payload)
+- `PATCH /api/alerts/{jobId}/resolve` (sem payload)
+
+O detalhe consulta automaticamente somente estados `PENDING`, `QUEUED` e `PROCESSING`, com intervalo de 1,5 segundo após a conclusão da requisição anterior e limite de 60 segundos. Requisições em andamento são canceladas ao sair da tela, entrar em segundo plano ou atingir o limite; voltar ao app não renova esse prazo. Estados terminais e erros interrompem a consulta automática. **Consultar novamente** faz somente GET no mesmo job, sem criar outra análise e sem renovar a janela automática após o limite.
+
+O risco vem exclusivamente de `result.riskLevel`; campos ausentes exibem **Sem dados**, e `INSUFFICIENT_DATA` permanece diferente de `NORMAL`. Resultados mostram disponibilidade hídrica/bruta, VPD, tendência, qualidade, regras, limitações e chuva quando disponíveis. Snapshots têm contrato próprio (`soilMoisture`, `airTemperature`, `airHumidity`, `simulated`); **Regras demonstrativas** nos contextos de job/resultado/alerta nunca marca uma leitura real como simulada. A apresentação não é uma prescrição ou diagnóstico agronômico.
+
+Somente alertas `OPEN` permitem reconhecimento; `OPEN` ou `ACKNOWLEDGED` permitem resolução, sempre com confirmação explícita. PATCH não tem corpo de resposta: a interface consulta o estado novamente e invalida jobs, alertas, talhão e dashboard. Não há atualização otimista nem alteração local da classificação/cor do risco. Testes puros cobrem estados, polling, prazo, traduções, nulls, demo/simulado e transições. Polling/cancelamento, navegação, confirmações, fontes ampliadas e API real ainda precisam de teste em dispositivo.
+
+## Orientação contextual por IA — etapa 10
+
+Os detalhes da análise e do alerta oferecem **Entender análise/alerta** quando `job.result` existe. O risco é calculado em **Java**: a IA fornece apenas explicação contextual com **RAG**, preservando a classificação de `result.riskLevel`, métricas, alertas e avisos demonstrativos/simulados. Cada orientação pertence ao job original; uma nova condição exige outra análise.
+
+- `POST /api/risk-jobs/{jobId}/guidance`: sem body, HTTP 200 com o RiskJob inteiro; orientação em `guidance`. Timeout exclusivo de 180 segundos, sem retry automático.
+- `GET /api/risk-jobs/{jobId}`: **Consultar atualização** consulta o mesmo job, sem repetir o POST. Um 409 também consulta o job; 401/403 seguem a autenticação existente.
+
+Somente `fallback=false` confirma orientação persistida: ela é exibida diretamente, sem regeneração forçada, e invalida caches de jobs, alertas e dashboard. `fallback=true` aparece como **Contingência**, com motivo traduzido, conteúdo e tentativa manual; permanece em memória da sessão enquanto a tela/cache local existir, mesmo se um GET retornar `guidance=null`. Conteúdo sem `fallback` é identificado como legado, sem afirmar sucesso. Timeout, rede e 5xx preservam o resultado determinístico e exigem consulta antes de outra solicitação explícita.
+
+Resumo, sinais, recomendação, ações, avisos e fontes são texto simples. Somente links HTTP(S) válidos podem abrir por ação do usuário; fontes vazias não geram referências inventadas. Data da geração usa o fuso do dispositivo; modelo e versão do prompt ficam em uma área técnica recolhível. Testes puros cobrem classificação de fallback, decisões, motivos, URLs, preservação do risco e contingência local. Gemini/RAG reais, persistência/reuso, indisponibilidade do provedor, timeout, navegação, leitor de tela e abertura de fontes ainda exigem validação com backend real em Android/iOS.
 
 ## Variáveis de ambiente
 
@@ -234,6 +264,6 @@ As verificações cobrem funções puras de autenticação e dos módulos agríc
 
 ## Módulos planejados
 
-Ainda **não implementados**: device-key, entrada de IoT (`/device-readings`), telas/ações de alertas e RiskJob, análise legada, orientação por IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
+Ainda **não implementados**: device-key, entrada de IoT (`/device-readings`), análise legada, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend; a orientação com Gemini/RAG é consumida somente pela API, sem conexão direta do aplicativo com esses serviços.
 
 Documentação consultada: [Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/), [SecureStore](https://docs.expo.dev/versions/v58.0.0/sdk/securestore/), [temas](https://docs.expo.dev/develop/user-interface/color-themes/) e [autenticação com React Navigation](https://reactnavigation.org/docs/auth-flow/).

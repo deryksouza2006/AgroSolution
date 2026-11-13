@@ -3,8 +3,9 @@ import { Text, View } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import type { Dashboard, DashboardPage } from '../../types/dashboard';
 import { dashboardCounts } from '../../utils/dashboardFormatting';
+import { AppButton } from '../AppButton';
 
-export function DashboardSummaryCards({ dashboard }: { dashboard: Dashboard }) {
+export function DashboardSummaryCards({ dashboard, onAlerts }: { dashboard: Dashboard; onAlerts?: () => void }) {
   const { theme } = useTheme();
   const counts = dashboardCounts(dashboard);
   const fallbackHint = (page: DashboardPage<unknown>) => page.totalElements === null && page.available ? 'Itens recebidos; total não informado' : undefined;
@@ -22,6 +23,7 @@ export function DashboardSummaryCards({ dashboard }: { dashboard: Dashboard }) {
       <Text style={[theme.typography.label, { color: theme.colors.text }]}>{card.label}</Text>
       <Text style={[theme.typography.hero, { color: theme.colors.text }]}>{card.value === null ? 'Não informado' : new Intl.NumberFormat('pt-BR').format(card.value)}</Text>
       {card.hint && <Text style={[theme.typography.caption, { color: theme.colors.textSecondary }]}>{card.hint}</Text>}
+      {card.label === 'Alertas abertos' && onAlerts && <AppButton title="Ver alertas" variant="secondary" onPress={onAlerts} />}
     </View>)}
   </View>;
 }

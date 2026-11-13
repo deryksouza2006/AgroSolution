@@ -20,8 +20,10 @@ interface Props {
   onSensor: (id: number) => void;
   onReading: (id: number) => void;
   onDiary: (cropAreaId: number, name: string) => void;
+  onAlert: (jobId: number) => void;
+  onJob: (jobId: number, cropAreaId: number | null) => void;
 }
-export function DashboardFeed({ dashboard, header, refreshing, onRefresh, onCrop, onSensor, onReading, onDiary }: Props) {
+export function DashboardFeed({ dashboard, header, refreshing, onRefresh, onCrop, onSensor, onReading, onDiary, onAlert, onJob }: Props) {
   const { theme } = useTheme();
   const sections = useMemo(() => dashboard ? dashboardSections(dashboard) : [], [dashboard]);
   const cropAction = (id: number | null) => id === null ? undefined : () => onCrop(id);
@@ -29,7 +31,14 @@ export function DashboardFeed({ dashboard, header, refreshing, onRefresh, onCrop
     if (!dashboard) return null;
     switch (entry.kind) {
       case 'crop': return <DashboardCropCard summary={entry.value} name={dashboardCropName(dashboard, entry.value.cropAreaId)} onPress={cropAction(entry.value.cropAreaId)} />;
-      case 'alert': case 'job': return <DashboardJobCard job={entry.value} cropName={dashboardCropName(dashboard, entry.value.cropAreaId)} alert={entry.kind === 'alert'} onPress={cropAction(entry.value.cropAreaId)} />;
+      case 'alert': case 'job': {
+        const job = entry.value;
+        const id = job.id;
+        const alert = entry.kind === 'alert';
+        return <DashboardJobCard job={job} cropName={dashboardCropName(dashboard, job.cropAreaId)} alert={alert}
+          actionLabel={id === null ? 'Ver talhão' : alert ? 'Ver alerta' : 'Ver análise'}
+          onPress={id === null ? cropAction(job.cropAreaId) : () => { if (alert) onAlert(id); else onJob(id, job.cropAreaId); }} />;
+      }
       case 'sensor': {
         const sensor = entry.value;
         const id = sensor.id;
