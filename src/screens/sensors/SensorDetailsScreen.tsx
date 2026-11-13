@@ -82,6 +82,10 @@ export function SensorDetailsScreen({ route, navigation }: NativeStackScreenProp
     {health.data && <SensorHealthPanel health={health.data} />}
     <AppButton title="Atualizar dados e saúde" variant="secondary" disabled={blocked || query.isFetching || health.isFetching} onPress={refresh} />
     {actionError && <ErrorState title="Não foi possível excluir o sensor" message={actionError} />}
+    <AppButton title="Ver leituras" variant="secondary" disabled={blocked}
+      onPress={() => navigation.navigate('Readings', { scope: { kind: 'sensor', sensorId: sensor.id, sensorName: sensor.name } })} />
+    <AppButton title="Registrar leitura" disabled={blocked || sensor.status !== 'ACTIVE'}
+      onPress={() => navigation.navigate('Readings', { scope: { kind: 'sensor', sensorId: sensor.id, sensorName: sensor.name }, registerSensorId: sensor.id })} />
     <AppButton title="Editar sensor" variant="secondary" disabled={blocked} onPress={() => navigation.navigate('SensorEdit', { id: sensor.id, listCropAreaId: route.params.listCropAreaId })} />
     <AppButton title={deletion.isPending ? 'Excluindo…' : 'Excluir sensor'} variant="danger" loading={deletion.isPending} disabled={blocked} onPress={confirmDelete} />
   </ScreenContainer>;

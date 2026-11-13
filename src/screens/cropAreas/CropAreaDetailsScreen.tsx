@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useIsFocused } from '@react-navigation/native';
 import { AppButton } from '../../components/AppButton';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { CropAreaStatusBadge } from '../../components/cropAreas/CropAreaStatusBadge';
+import { LatestReadingSummary } from '../../components/readings/LatestReadingSummary';
 import { ErrorState } from '../../components/feedback/ErrorState';
 import { LoadingState } from '../../components/feedback/LoadingState';
 import { useArchiveCropArea } from '../../hooks/cropAreas/useArchiveCropArea';
@@ -18,6 +20,7 @@ import { formatArea, formatAreaUnit } from '../../utils/numberFormatting';
 
 export function CropAreaDetailsScreen({ route, navigation }: NativeStackScreenProps<CropAreasStackParamList, 'CropAreaDetails'>) {
   const { theme } = useTheme();
+  const focused = useIsFocused();
   const deletion = useDeleteCropArea();
   const archive = useArchiveCropArea();
   const query = useCropArea(route.params.id, !deletion.isPending && !deletion.isSuccess);
@@ -102,6 +105,10 @@ export function CropAreaDetailsScreen({ route, navigation }: NativeStackScreenPr
       </View>)}
     </View>
     {actionError && <ErrorState title="Não foi possível concluir a ação" message={actionError} />}
+    <LatestReadingSummary cropAreaId={area.id} enabled={focused && !pending && !deletion.isSuccess}
+      onOpen={reading => navigation.navigate('Readings', { scope: { kind: 'cropArea', cropAreaId: area.id, cropAreaName: area.name }, readingId: reading.id })} />
+    <AppButton title="Leituras do talhão" variant="secondary" disabled={pending || deletion.isSuccess}
+      onPress={() => navigation.navigate('Readings', { scope: { kind: 'cropArea', cropAreaId: area.id, cropAreaName: area.name } })} />
     <AppButton title="Ver sensores" variant="secondary" disabled={pending || deletion.isSuccess}
       onPress={() => navigation.navigate('Sensors', { screen: 'SensorList', params: { cropAreaId: area.id, cropAreaName: area.name } })} />
     <AppButton title="Perfil agronômico" variant="secondary" disabled={pending || deletion.isSuccess}

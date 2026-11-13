@@ -4,6 +4,7 @@ import { useTheme } from '../hooks/useTheme';
 import { SensorListScreen } from '../screens/sensors/SensorListScreen';
 import { SensorDetailsScreen } from '../screens/sensors/SensorDetailsScreen';
 import { SensorFormScreen } from '../screens/sensors/SensorFormScreen';
+import { ReadingsStack } from './ReadingsStack';
 import type { SensorsStackParamList } from '../types/navigation';
 
 const Stack = createNativeStackNavigator<SensorsStackParamList>();
@@ -18,5 +19,6 @@ export function SensorsStack() {
     <Stack.Screen name="SensorDetails" component={SensorDetailsScreen} options={{ title: 'Detalhes do sensor' }} />
     <Stack.Screen name="SensorCreate" component={SensorFormScreen} options={{ title: 'Cadastrar sensor' }} />
     <Stack.Screen name="SensorEdit" component={SensorFormScreen} options={{ title: 'Editar sensor' }} />
+    <Stack.Screen name="Readings" component={ReadingsStack} options={{ headerShown: false }} />
   </Stack.Navigator>;
 }

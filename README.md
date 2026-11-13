@@ -1,6 +1,6 @@
 # CitizenTech Mobile — Monitoramento agrícola
 
-Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões, o Diário Agrícola, o perfil agronômico por talhão e, na etapa 6, o CRUD/transferência de sensores com consulta de saúde.
+Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões, o Diário Agrícola, o perfil agronômico por talhão, o CRUD/transferência de sensores com consulta de saúde e, na etapa 7, as leituras reais dos sensores.
 
 ## Tecnologias
 
@@ -130,6 +130,22 @@ O código do dispositivo é normalizado em maiúsculas, obrigatório no cadastro
 
 A consulta `/health` ocorre somente no detalhe do sensor em foco, sem chamadas por card. Status administrativo, comunicação, saúde calculada, última leitura, bateria, calibração e manutenção são apresentados separadamente. A **política de saúde é demonstrativa**, sem diagnóstico real de hardware ou recálculo local; ausência de leituras preserva os estados retornados pela API. Datas com horário usam o fuso do dispositivo. Listas/detalhes/saúde e propriedades/talhões de origem e destino são atualizados ou invalidados após mutations, sem repetição automática. Formulários preservam valores após erro, impedem envio duplicado e confirmam descarte de alterações. Testes puros cobrem validação, data futura/local, código, traduções, conflitos e interpretação da saúde. Fluxos com API real, teclado, leitores de tela, fontes ampliadas e navegação ainda exigem teste em Android/iOS.
 
+## Leituras dos sensores — etapa 7
+
+A stack de Sensores oferece **Todas as leituras**; os detalhes do sensor incluem **Ver leituras** e **Registrar leitura**. Nos detalhes do talhão, **Leituras do talhão** abre a mesma listagem filtrada e a leitura mais recente é consultada separadamente (404 vira estado vazio). Os três contextos usam uma tela paginada, páginas de 20 e ordenação por `measuredAt` decrescente, com refresh, retry e preservação dos dados disponíveis em falhas de rede. Detalhes mostram medições, unidades, origem e datas no fuso do dispositivo. Leituras `SIMULATED` vindas da API são identificadas como **Dados simulados**; o aplicativo não gera simulações. O status de análise aparece somente como **Processamento técnico da leitura**, sem resultado agronômico ou de IA.
+
+- `POST /api/sensor-readings`
+- `GET /api/sensor-readings?page=0&size=20`
+- `GET /api/sensor-readings/{id}`
+- `DELETE /api/sensor-readings/{id}`
+- `GET /api/sensors/{sensorId}/readings?page=0&size=20`
+- `GET /api/crop-areas/{cropAreaId}/readings?page=0&size=20`
+- `GET /api/crop-areas/{cropAreaId}/readings/latest`
+
+O formulário manual seleciona sensores reais ativos em páginas, verifica o talhão não arquivado e exige a medição principal do tipo. Estações meteorológicas aceitam temperatura, umidade do ar, umidade do solo ou chuva; bateria é opcional e não substitui uma medição ambiental. Decimais aceitam vírgula ou ponto com até três casas, sem arredondamento de entradas inválidas. Data/horário locais são convertidos para UTC pelos utilitários do diário; ambos vazios omitem `measuredAt`, usando o horário atual da API. O limite futuro é de cinco minutos. Chuva (inclusive 0 mm) exige início do intervalo estritamente anterior à medição. O payload contém apenas os campos contratados e `source: MANUAL`.
+
+Leituras são imutáveis, sem edição ou PUT. Exclusão requer confirmação e é impedida para `ANALYZED`, inclusive se o processamento mudar enquanto a tela estiver aberta. Os três conflitos documentados (talhão arquivado, sensor inativo e leitura já processada) têm orientação específica; mensagens desconhecidas permanecem genéricas. Cadastro/exclusão invalidam listas, última leitura e saúde do sensor, sem retry automático ou exclusão otimista. O formulário evita envio duplicado, preserva valores após erro e confirma descarte de alterações. Testes puros cobrem limites, tipos, chuva/intervalo, datas, normalização, traduções e 404 da última leitura. O TypeScript permite imports explícitos `.ts` para compartilhar os utilitários existentes também nos testes do Node, sem novas dependências.
+
 ## Variáveis de ambiente
 
 ```bash
@@ -212,6 +228,6 @@ As verificações cobrem funções puras de autenticação, propriedades e talh�
 
 ## Módulos planejados
 
-Ainda **não implementados**: device-key, entrada de IoT, leituras, dashboard real, alertas, RiskJob, IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
+Ainda **não implementados**: device-key, entrada de IoT (`/device-readings`), dashboard real, alertas, RiskJob, análise legada, IA, RAG, interface de técnico, mapas, gráficos e simulação. Spring Boot, PostgreSQL, RabbitMQ, Spring AI, Gemini e PGVector pertencem ao backend/planejamento; o aplicativo não se conecta diretamente a esses serviços.
 
 Documentação consultada: [Expo SDK 58](https://docs.expo.dev/versions/v58.0.0/), [SecureStore](https://docs.expo.dev/versions/v58.0.0/sdk/securestore/), [temas](https://docs.expo.dev/develop/user-interface/color-themes/) e [autenticação com React Navigation](https://reactnavigation.org/docs/auth-flow/).

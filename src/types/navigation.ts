@@ -1,4 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { ReadingScope } from './reading';
 
 export type AuthStackParamList = { Login: undefined; Register: undefined };
 export type FarmsStackParamList = {
@@ -17,6 +18,7 @@ export type CropAreasStackParamList = {
   AgronomicProfile: { cropAreaId: number };
   AgronomicProfileForm: { cropAreaId: number };
   Sensors: NavigatorScreenParams<SensorsStackParamList>;
+  Readings: ReadingsEntryParams;
 };
 export type ActivitiesStackParamList = {
   ActivityList: { cropAreaId: number; cropAreaName: string };
@@ -37,6 +39,13 @@ export type SensorsStackParamList = {
   SensorDetails: { id: number; listCropAreaId?: number };
   SensorCreate: { cropAreaId?: number } | undefined;
   SensorEdit: { id: number; listCropAreaId?: number };
+  Readings: ReadingsEntryParams;
+};
+export type ReadingsEntryParams = { scope: ReadingScope; registerSensorId?: number; readingId?: number };
+export type ReadingsStackParamList = {
+  ReadingList: { scope: ReadingScope };
+  ReadingDetails: { id: number; scope: ReadingScope };
+  ReadingCreate: { sensorId?: number; scope: ReadingScope };
 };
 export type ProducerStackParamList = {
   Tabs: NavigatorScreenParams<ProducerTabParamList> | undefined;

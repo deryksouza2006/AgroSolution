@@ -43,6 +43,7 @@ function SensorList({ navigation, route }: Props) {
       refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => { if (!query.isFetching) void query.refetch(); }} tintColor={theme.colors.primary} colors={[theme.colors.primary]} />}
       ListHeaderComponent={<View style={{ gap: theme.spacing.lg }}>
         <AppButton title="Cadastrar sensor" onPress={() => navigation.navigate('SensorCreate', { cropAreaId })} />
+        <AppButton title="Todas as leituras" variant="secondary" onPress={() => navigation.navigate('Readings', { scope: { kind: 'all' } })} />
         <Text accessibilityRole="header" style={[theme.typography.title, { color: theme.colors.text }]}>{cropAreaId === undefined ? 'Todos os sensores' : `Sensores de ${route.params?.cropAreaName ?? 'seu talhão'}`}</Text>
         <Text style={[theme.typography.body, { color: theme.colors.textSecondary }]}>Abra um sensor para consultar seus dados e sua saúde.</Text>
         {query.isError && <ErrorState message={parseSensorError(query.error)} onRetry={() => { void query.refetch(); }} />}
