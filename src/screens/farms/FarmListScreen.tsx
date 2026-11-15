@@ -24,7 +24,6 @@ export function FarmListScreen({ navigation }: NativeStackScreenProps<FarmsStack
   useEffect(() => {
     if (!query.data || query.isPlaceholderData) return;
     setLastLoaded(query.data);
-    // Deletion may remove the last item of the last page.
     const lastPage = Math.max(0, query.data.totalPages - 1);
     if (page > lastPage) setPage(lastPage);
   }, [query.data, query.isPlaceholderData, page]);

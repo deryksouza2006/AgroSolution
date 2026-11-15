@@ -1,7 +1,6 @@
 import type { GuidanceSource, RiskGuidance } from '../types/riskJob';
 
 const record = (value: unknown): Record<string, unknown> | null => typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
-// Keep source metadata and AI prose exactly as returned, as plain strings only.
 const text = (value: unknown): string | null => typeof value === 'string' && value.trim() ? value : null;
 const strings = (value: unknown): string[] => Array.isArray(value) ? value.flatMap(item => { const value = text(item); return value === null ? [] : [value]; }) : [];
 export function normalizeGuidance(value: unknown): RiskGuidance | null {

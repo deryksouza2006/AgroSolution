@@ -44,6 +44,19 @@ test('quantity accepts comma or dot with up to three decimals without rounding',
   for (const input of ['', '0', '0,000', '-1', '+1', '1.0000', '1,2345', '1.000,50', '1,000.50', '1e3', 'NaN', 'Infinity', '9007199254740.991']) assert.equal(parseActivityQuantity(input), null, input);
 });
 
+test('activity quantity respects the real API limit of eleven integer digits', () => inTimezone('UTC', () => {
+  for (const input of ['99999999999.999', '99999999999,999', '00099999999999.999']) {
+    assert.equal(parseActivityQuantity(input), 99999999999.999);
+    assert.equal(toActivityRequest({ ...values, quantity: input, unit: 'L' }, now).valid, true);
+  }
+  for (const input of ['100000000000', '100000000000.001', '000100000000000', '9999999999999']) {
+    assert.equal(parseActivityQuantity(input), null);
+    const result = toActivityRequest({ ...values, quantity: input, unit: 'L' }, now);
+    assert.equal(result.valid, false);
+    assert.match(result.errors.quantity, /11 dígitos inteiros/);
+  }
+}));
+
 test('calendar validation rejects overflow and invalid time fields', () => {
   for (const date of ['', '31/02/2026', '29/02/2026', '31/04/2026', '00/11/2026', '12/13/2026', '2026-11-12']) assert.equal(localDateTimeToISO(date, '09:00'), null, date);
   for (const time of ['', '24:00', '12:60', '12:00:60', '9:00', '12:00:00.1234']) assert.equal(localDateTimeToISO('12/11/2026', time), null, time);

@@ -18,8 +18,6 @@ export function useGuidance(jobId: number, job: RiskJob) {
   const mounted = useRef(false), submitting = useRef(false), consulting = useRef(false);
   const [checking, setChecking] = useState(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  // Ephemeral UI state: never persisted to storage or inserted as RiskJob.guidance.
-  // Logout clears this cache with the rest of the session.
   const localQuery = useQuery({ queryKey: guidanceKeys.local(jobId), queryFn: skipToken, initialData: emptyGuidanceLocalState,
     staleTime: Infinity, gcTime: 5 * 60_000 });
   const local = localQuery.data ?? emptyGuidanceLocalState();
@@ -74,7 +72,6 @@ export function useGuidance(jobId: number, job: RiskJob) {
       writeLocal(previous => guidanceLocalAfterResponse(previous, refreshed.guidance ?? null, resultReady, true));
       if (isValidGuidance(refreshed.guidance)) await publishValid(refreshed.guidance, refreshed);
       else {
-        // This GET may legitimately contain guidance=null after fallback. Keep it only in local UI state.
         client.setQueryData<RiskJob>(alertKeys.detail(jobId), previous => previous ? preserveRiskOnGuidanceRefresh(previous, refreshed) : undefined);
       }
     } catch (error: unknown) {
@@ -96,7 +93,6 @@ export function useGuidance(jobId: number, job: RiskJob) {
     writeLocal(previous => ({ ...previous, error: null }));
     try { await mutation.mutateAsync({ jobId, snapshot: current }); }
     catch (error: unknown) {
-      // 409 refreshes this same job exactly once; it never repeats generation.
       if (guidanceFailureKind(error) === 'conflict') await consult();
     } finally { submitting.current = false; }
   };

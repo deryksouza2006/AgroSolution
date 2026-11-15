@@ -5,6 +5,7 @@ import type { Activity } from '../../types/activity';
 import type { CropArea } from '../../types/cropArea';
 import { isArchivedActivityError } from '../../utils/activityErrors';
 import { activityKeys } from './activityKeys';
+import { dashboardKeys } from '../dashboard/dashboardKeys';
 
 export function useActivityCache(cropAreaId: number) {
   const client = useQueryClient();
@@ -18,12 +19,12 @@ export function useActivityCache(cropAreaId: number) {
       else if (result) client.setQueryData(activityKeys.detail(cropAreaId, id), result);
       void client.invalidateQueries({ queryKey: activityKeys.lists(cropAreaId) });
       void client.invalidateQueries({ queryKey: cropAreaKeys.detail(cropAreaId) });
+      void client.invalidateQueries({ queryKey: dashboardKeys.all });
     },
     async onError(error: unknown) {
       if (!isSessionCurrent(session) || !isArchivedActivityError(error)) return;
       await client.cancelQueries({ queryKey: cropAreaKeys.detail(cropAreaId) });
       if (!isSessionCurrent(session)) return;
-      // This reflects the server's explicit rejection, rather than an optimistic state.
       client.setQueryData<CropArea>(cropAreaKeys.detail(cropAreaId), current => current ? { ...current, status: 'ARCHIVED' } : current);
       void client.invalidateQueries({ queryKey: cropAreaKeys.detail(cropAreaId) });
       void client.invalidateQueries({ queryKey: cropAreaKeys.lists() });

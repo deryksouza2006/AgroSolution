@@ -82,7 +82,6 @@ test('generation is explicit and requires a result; persisted guidance is shown 
   assert.equal(guidanceDecision(true, fallback, empty), 'retry');
   assert.equal(guidanceDecision(false, fallback, empty), 'wait');
   assert.equal(guidanceDecision(true, valid, empty), 'show');
-  // A valid server result also resolves old uncertainty, never forces regeneration.
   assert.equal(guidanceDecision(true, valid, { ...empty, uncertain: true, needsUpdate: true }), 'show');
   assert.equal(guidanceDecision(true, null, { ...empty, response: valid }), 'show');
   assert.equal(effectiveGuidance(valid, { ...empty, response: fallback }), valid);
@@ -99,7 +98,6 @@ test('timeout, disconnected network and 5xx keep the request uncertain and requi
     assert.equal(guidanceDecision(true, null, local), 'consult');
     const persisted = normalizeGuidance({ fallback: false });
     assert.equal(guidanceDecision(true, null, guidanceLocalAfterResponse(local, persisted, true, true)), 'show');
-    // A confirmed GET with no guidance permits a new user action; it does not dispatch it.
     assert.equal(guidanceDecision(true, null, guidanceLocalAfterResponse(local, null, true, true)), 'generate');
   }
   assert.equal(guidanceFailureKind(failure(409)), 'conflict');

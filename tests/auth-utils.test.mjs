@@ -4,7 +4,7 @@ import { AxiosError } from 'axios';
 import { AppError, isUnauthorized, parseApiError, parseApiFieldErrors } from '../src/utils/errors.ts';
 import { validateAuthForm } from '../src/utils/validation.ts';
 
-const input = { name: 'Produtor', email: 'produtor@example.com', password: '12345678' };
+const input = { name: 'Produtor', email: 'produtor@example.com', password: 'p'.repeat(8) };
 function responseError(status, data) {
   return new AxiosError('Internal diagnostic', undefined, undefined, undefined, { status, data });
 }

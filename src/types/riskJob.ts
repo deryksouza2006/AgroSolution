@@ -29,7 +29,6 @@ export interface RiskAlert {
   resolvedAt: string | null;
   resolvedBy: number | null;
 }
-// Snapshots use the analysis contract, independently of ReadingResponse.
 export interface RiskMeasurement {
   id: number | null;
   sensorId: number | null;
@@ -55,7 +54,6 @@ export interface RiskGuidance {
   signals: string[];
   sources: GuidanceSource[];
   riskLevel: string | null;
-  // null denotes legacy/unknown provenance, never successful generation.
   fallback: boolean | null;
   reason: string | null;
   model: string | null;

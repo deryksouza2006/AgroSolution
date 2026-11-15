@@ -27,7 +27,6 @@ export function localDateTimeToISO(dateText: string, timeText: string): string |
   if (hour > 23 || minute > 59 || second > 59) return null;
   const day = date.getDate(), month = date.getMonth(), year = date.getFullYear();
   date.setHours(hour, minute, second, milliseconds);
-  // Reject overflow and local times that do not exist during a DST transition.
   if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day
     || date.getHours() !== hour || date.getMinutes() !== minute || date.getSeconds() !== second) return null;
   return date.toISOString();
@@ -49,7 +48,7 @@ export function parseActivityQuantity(input: string): number | null {
   if (!/^\d+(?:\.\d{1,3})?$/.test(text)) return null;
   const [whole, fraction = ''] = text.split('.');
   const integer = whole.replace(/^0+(?=\d)/, '');
-  if (integer.length > 13) return null;
+  if (integer.length > 11) return null;
   const thousandths = BigInt(integer) * 1000n + BigInt(fraction.padEnd(3, '0'));
   if (thousandths <= 0n || thousandths > BigInt(Number.MAX_SAFE_INTEGER)) return null;
   const value = Number(`${integer}.${fraction || '0'}`);
@@ -74,7 +73,7 @@ export function validateActivityForm(values: ActivityFormValues, now = Date.now(
     errors.quantity = 'Preencha quantidade e unidade juntas ou deixe ambas vazias.';
     errors.unit = errors.quantity;
   }
-  if (hasQuantity && parseActivityQuantity(values.quantity) === null) errors.quantity = 'Informe quantidade positiva com até 3 casas decimais, sem separador de milhar ou perda de precisão.';
+  if (hasQuantity && parseActivityQuantity(values.quantity) === null) errors.quantity = 'Informe quantidade positiva com até 11 dígitos inteiros e 3 casas decimais, sem separador de milhar ou perda de precisão.';
   if (values.unit.trim().length > 30) errors.unit = 'A unidade deve ter no máximo 30 caracteres.';
   return errors;
 }
@@ -96,7 +95,6 @@ function dayBoundary(input: string, end: boolean): string | null {
   const date = calendarDate(input);
   if (!date) return null;
   if (end) date.setDate(date.getDate() + 1);
-  // The start of a local day can be 01:00 during historical DST transitions.
   date.setHours(0, 0, 0, 0);
   if (end) date.setTime(date.getTime() - 1);
   return date.toISOString();

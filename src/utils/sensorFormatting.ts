@@ -4,10 +4,10 @@ const typeLabels: Record<SensorType, string> = { SOIL_MOISTURE: 'Umidade do solo
 const statusLabels: Record<SensorStatus, string> = { ACTIVE: 'Ativo', INACTIVE: 'Inativo', FAULT: 'Falha', MAINTENANCE: 'Manutenção' };
 const communicationLabels: Record<SensorCommunicationStatus, string> = { RECENT: 'Comunicação recente', STALE: 'Comunicação desatualizada', OFFLINE: 'Offline', INVALID_TIMESTAMP: 'Data/hora inválida' };
 const healthLabels: Record<SensorCalculatedHealth, string> = { HEALTHY: 'Saudável', STALE: 'Dados desatualizados', OFFLINE: 'Offline', POSSIBLE_FAULT: 'Possível falha', INSUFFICIENT_DATA: 'Dados insuficientes' };
-export const formatSensorType = (value: SensorType) => typeLabels[value] ?? 'Tipo indisponível';
-export const formatSensorStatus = (value: SensorStatus | null) => value ? statusLabels[value] ?? 'Status indisponível' : 'Status não informado';
-export const formatSensorCommunication = (value: SensorCommunicationStatus | null) => value ? communicationLabels[value] ?? 'Comunicação indisponível' : 'Comunicação não informada';
-export const formatSensorHealth = (value: SensorCalculatedHealth | null) => value ? healthLabels[value] ?? 'Saúde indisponível' : 'Saúde não informada';
+export const formatSensorType = (value: SensorType) => Object.hasOwn(typeLabels, value) ? typeLabels[value] : 'Tipo indisponível';
+export const formatSensorStatus = (value: SensorStatus | null) => value ? Object.hasOwn(statusLabels, value) ? statusLabels[value] : 'Status indisponível' : 'Status não informado';
+export const formatSensorCommunication = (value: SensorCommunicationStatus | null) => value ? Object.hasOwn(communicationLabels, value) ? communicationLabels[value] : 'Comunicação indisponível' : 'Comunicação não informada';
+export const formatSensorHealth = (value: SensorCalculatedHealth | null) => value ? Object.hasOwn(healthLabels, value) ? healthLabels[value] : 'Saúde indisponível' : 'Saúde não informada';
 export function interpretSensorHealth(health: SensorHealth) {
   return {
     administrativeStatus: formatSensorStatus(health.administrativeStatus),

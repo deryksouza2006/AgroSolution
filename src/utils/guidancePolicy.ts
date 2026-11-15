@@ -30,7 +30,6 @@ export function guidanceLocalAfterResponse(previous: GuidanceLocalState, incomin
   return { response, uncertain: false, needsUpdate: !fromConsult && incoming !== null && incoming.fallback !== true && incoming.fallback !== false, blocked: fromConsult && !resultReady,
     error: fromConsult && !resultReady ? 'A análise ainda não terminou. Consulte a atualização antes de solicitar orientação.' : null };
 }
-// An explanation never replaces deterministic results, alerts or measurement snapshots.
 export function attachGuidance(job: RiskJob, guidance: RiskGuidance): RiskJob { return { ...job, guidance }; }
 export function preserveRiskOnGuidanceRefresh(current: RiskJob, incoming: RiskJob): RiskJob {
   return { ...incoming, demo: current.demo || incoming.demo, result: current.result ?? incoming.result, alert: incoming.alert ?? current.alert,

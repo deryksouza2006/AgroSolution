@@ -42,7 +42,6 @@ function reading(item: ObjectData): DashboardReading | null {
   return result.id || result.sensorId || result.cropAreaId || result.measuredAt || [result.temperatureCelsius, result.airHumidityPercent, result.soilMoisturePercent, result.batteryPercent, result.rainfallMillimeters].some(value => value !== null) ? result : null;
 }
 
-/** Normalize only fields used by the Home, keeping absent metrics and totals unknown. */
 export function normalizeDashboard(value: unknown): Dashboard {
   const root = dashboardRecord(value) ?? {};
   let partial = false;

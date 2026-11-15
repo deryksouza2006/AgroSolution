@@ -5,6 +5,7 @@ import { farmKeys } from '../farms/farmKeys';
 import { readingKeys } from '../readings/readingKeys';
 import type { Sensor } from '../../types/sensor';
 import { sensorKeys } from './sensorKeys';
+import { dashboardKeys } from '../dashboard/dashboardKeys';
 
 export function useSensorCache() {
   const client = useQueryClient();
@@ -23,8 +24,8 @@ export function useSensorCache() {
     void client.invalidateQueries({ queryKey: sensorKeys.lists() });
     void client.invalidateQueries({ queryKey: cropAreaKeys.lists() });
     void client.invalidateQueries({ queryKey: farmKeys.lists() });
-    void client.invalidateQueries({ queryKey: readingKeys.lists() });
-    void client.invalidateQueries({ queryKey: [...readingKeys.all, 'latest'] });
+    void client.invalidateQueries({ queryKey: readingKeys.all });
+    void client.invalidateQueries({ queryKey: dashboardKeys.all });
     for (const cropAreaId of new Set([...cropAreaIds, ...(result ? [result.cropAreaId] : [])])) void client.invalidateQueries({ queryKey: cropAreaKeys.detail(cropAreaId) });
     for (const farmId of new Set([...farmIds, ...(result ? [result.farmId] : [])])) void client.invalidateQueries({ queryKey: farmKeys.detail(farmId) });
   };

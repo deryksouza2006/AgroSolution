@@ -14,7 +14,6 @@ export function parseFarmArea(input: string): number | null {
   if (!/^\d+(?:[.,]\d{1,2})?$/.test(text)) return null;
   const [whole, fraction = ''] = text.replace(',', '.').split('.');
   const integer = whole.replace(/^0+(?=\d)/, '');
-  // Integer hundredths avoid accepting precision lost during Number conversion.
   if (integer.length > 14) return null;
   const hundredths = BigInt(integer) * 100n + BigInt(fraction.padEnd(2, '0'));
   if (hundredths <= 0n || hundredths > BigInt(Number.MAX_SAFE_INTEGER)) return null;

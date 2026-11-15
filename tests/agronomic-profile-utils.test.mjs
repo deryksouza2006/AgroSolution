@@ -50,7 +50,7 @@ test('decimal normalization accepts comma, dot, whitespace and leading or traili
 });
 
 test('decimal normalization rejects partial, grouped, nonfinite and precision-losing values', () => {
-  for (const input of ['', ' ', '.', '38,', '1.000,50', '1,000.50', '1 000', '1e2', 'NaN', 'Infinity', '38abc', '0.1234567890123456789', '9007199254740993', '9'.repeat(400)]) assert.equal(parseAgronomicDecimal(input), null, input);
+  for (const input of ['', ' ', '.', '38,', '1.000,50', '1,000.50', '1 000', '1e2', 'NaN', 'Infinity', '38abc', '0.1357913579135791357913579', '9007199254740993', '9'.repeat(400)]) assert.equal(parseAgronomicDecimal(input), null, input);
 });
 
 test('decimal form values round-trip small and large API numbers without exponent notation', () => {

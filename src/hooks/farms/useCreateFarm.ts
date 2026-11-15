@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../auth/useAuth';
 import { farmService } from '../../services/farmService';
 import { farmKeys } from './farmKeys';
+import { dashboardKeys } from '../dashboard/dashboardKeys';
 
 export function useCreateFarm() {
   const queryClient = useQueryClient();
@@ -16,6 +17,7 @@ export function useCreateFarm() {
       if (!isSessionCurrent(session)) return;
       queryClient.setQueryData(farmKeys.detail(farm.id), farm);
       void queryClient.invalidateQueries({ queryKey: farmKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
     },
   });
 }

@@ -1,6 +1,8 @@
-# CitizenTech Mobile — Monitoramento agrícola
+# AgroConecta Mobile
 
-Aplicativo mobile CitizenTech, com nome provisório **Monitoramento agrícola**. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões, o Diário Agrícola, o perfil agronômico por talhão, o CRUD/transferência de sensores com consulta de saúde, as leituras reais dos sensores, o dashboard da Home, a análise determinística de risco hídrico com gerenciamento administrativo de alertas e a orientação contextual por IA vinculada às análises concluídas.
+Identificadores internos históricos, como `citizentech-mobile`, o slug Expo e as chaves de armazenamento `citizentech_*`, permanecem por compatibilidade. O nome público definitivo é AgroConecta; a navegação existente com React Navigation foi preservada.
+
+Aplicativo mobile **AgroConecta**, no repositório citizentech-mobile. A base inclui autenticação JWT, restauração de sessão, navegação protegida, perfil, temas e informações do aplicativo. Estão implementados o CRUD real de propriedades rurais, o CRUD/transferência/arquivamento de talhões, o Diário Agrícola, o perfil agronômico por talhão, o CRUD/transferência de sensores com consulta de saúde, as leituras reais dos sensores, o dashboard da Home, a análise determinística de risco hídrico com gerenciamento administrativo de alertas e a orientação contextual por IA vinculada às análises concluídas. Esta etapa atualiza a integração e a documentação sem alterações visuais.
 
 ## Tecnologias
 
@@ -15,7 +17,7 @@ O SDK 58 e as versões de React e React Native foram mantidos; na etapa 8, somen
 
 ## Arquitetura
 
-A organização por responsabilidade segue a arquitetura de referência do PetJourney Sprint 4, com domínio e versões próprios do CitizenTech:
+A organização por responsabilidade segue a arquitetura de referência do PetJourney Sprint 4, com domínio e versões próprios do AgroConecta:
 
 ```text
 Screen → Hook → TanStack Query → Service → Axios → API
@@ -142,7 +144,7 @@ A stack de Sensores oferece **Todas as leituras**; os detalhes do sensor incluem
 - `GET /api/crop-areas/{cropAreaId}/readings?page=0&size=20`
 - `GET /api/crop-areas/{cropAreaId}/readings/latest`
 
-O formulário manual seleciona sensores reais ativos em páginas, verifica o talhão não arquivado e exige a medição principal do tipo. Estações meteorológicas aceitam temperatura, umidade do ar, umidade do solo ou chuva; bateria é opcional e não substitui uma medição ambiental. Decimais aceitam vírgula ou ponto com até três casas, sem arredondamento de entradas inválidas. Data/horário locais são convertidos para UTC pelos utilitários do diário; ambos vazios omitem `measuredAt`, usando o horário atual da API. O limite futuro é de cinco minutos. Chuva (inclusive 0 mm) exige início do intervalo estritamente anterior à medição. O payload contém apenas os campos contratados e `source: MANUAL`.
+O formulário manual seleciona sensores reais ativos em páginas, verifica o talhão não arquivado e exige a medição principal do tipo. Estações meteorológicas aceitam temperatura, umidade do ar, umidade do solo ou chuva; bateria é opcional e não substitui uma medição ambiental. Decimais aceitam vírgula ou ponto com até três casas, sem arredondamento de entradas inválidas. Data/horário locais são convertidos para UTC pelos utilitários do diário; ambos vazios omitem `measuredAt`, usando o horário atual da API. Para chuva, a API exige esse instante no payload: com os campos vazios, o aplicativo envia o horário atual usado para validar o intervalo. O limite futuro é de cinco minutos. Chuva (de 0 a 999999,999 mm) exige início do intervalo estritamente anterior à medição. O payload contém apenas os campos contratados e `source: MANUAL`.
 
 Leituras são imutáveis, sem edição ou PUT. Exclusão requer confirmação e é impedida para `ANALYZED`, inclusive se o processamento mudar enquanto a tela estiver aberta. Os três conflitos documentados (talhão arquivado, sensor inativo e leitura já processada) têm orientação específica; mensagens desconhecidas permanecem genéricas. Cadastro/exclusão invalidam listas, última leitura e saúde do sensor, sem retry automático ou exclusão otimista. O formulário evita envio duplicado, preserva valores após erro e confirma descarte de alterações. Testes puros cobrem limites, tipos, chuva/intervalo, datas, normalização, traduções e 404 da última leitura. O TypeScript permite imports explícitos `.ts` para compartilhar os utilitários existentes também nos testes do Node, sem novas dependências.
 
@@ -169,7 +171,7 @@ O detalhe consulta automaticamente somente estados `PENDING`, `QUEUED` e `PROCES
 
 O risco vem exclusivamente de `result.riskLevel`; campos ausentes exibem **Sem dados**, e `INSUFFICIENT_DATA` permanece diferente de `NORMAL`. Resultados mostram disponibilidade hídrica/bruta, VPD, tendência, qualidade, regras, limitações e chuva quando disponíveis. Snapshots têm contrato próprio (`soilMoisture`, `airTemperature`, `airHumidity`, `simulated`); **Regras demonstrativas** nos contextos de job/resultado/alerta nunca marca uma leitura real como simulada. A apresentação não é uma prescrição ou diagnóstico agronômico.
 
-Somente alertas `OPEN` permitem reconhecimento; `OPEN` ou `ACKNOWLEDGED` permitem resolução, sempre com confirmação explícita. PATCH não tem corpo de resposta: a interface consulta o estado novamente e invalida jobs, alertas, talhão e dashboard. Não há atualização otimista nem alteração local da classificação/cor do risco. Testes puros cobrem estados, polling, prazo, traduções, nulls, demo/simulado e transições. Polling/cancelamento, navegação, confirmações, fontes ampliadas e API real ainda precisam de teste em dispositivo.
+Somente alertas `OPEN` permitem reconhecimento; `OPEN` ou `ACKNOWLEDGED` permitem resolução, sempre com confirmação explícita. A API retorna o RiskJob após o PATCH; o mobile ignora esse corpo, consulta o estado novamente e invalida jobs, alertas, talhão e dashboard. Não há atualização otimista nem alteração local da classificação/cor do risco. Testes puros cobrem estados, polling, prazo, traduções, nulls, demo/simulado e transições. Polling/cancelamento, navegação, confirmações, fontes ampliadas e API real ainda precisam de teste em dispositivo.
 
 ## Orientação contextual por IA — etapa 10
 
@@ -178,9 +180,15 @@ Os detalhes da análise e do alerta oferecem **Entender análise/alerta** quando
 - `POST /api/risk-jobs/{jobId}/guidance`: sem body, HTTP 200 com o RiskJob inteiro; orientação em `guidance`. Timeout exclusivo de 180 segundos, sem retry automático.
 - `GET /api/risk-jobs/{jobId}`: **Consultar atualização** consulta o mesmo job, sem repetir o POST. Um 409 também consulta o job; 401/403 seguem a autenticação existente.
 
-Somente `fallback=false` confirma orientação persistida: ela é exibida diretamente, sem regeneração forçada, e invalida caches de jobs, alertas e dashboard. `fallback=true` aparece como **Contingência**, com motivo traduzido, conteúdo e tentativa manual; permanece em memória da sessão enquanto a tela/cache local existir, mesmo se um GET retornar `guidance=null`. Conteúdo sem `fallback` é identificado como legado, sem afirmar sucesso. Timeout, rede e 5xx preservam o resultado determinístico e exigem consulta antes de outra solicitação explícita.
+O fluxo oficial é `RiskJob + guidance`, usando a coluna `risk_jobs.guidance` do backend; o mobile não utiliza `agronomic_analyses`. Guidance válida (`fallback=false`) e contingência (`fallback=true`) são persistidas pela API e devolvidas no GET do mesmo job. Somente `fallback=false` confirma geração válida: ela é exibida diretamente, sem regeneração forçada. `fallback=true` aparece como **Contingência** e permite nova tentativa manual. O estado local continua tolerando versões anteriores da API que devolvam `guidance=null`. Conteúdo sem `fallback` é identificado como legado, sem afirmar sucesso. Timeout, rede e 5xx preservam o resultado determinístico e exigem consulta antes de outra solicitação explícita.
 
-Resumo, sinais, recomendação, ações, avisos e fontes são texto simples. Somente links HTTP(S) válidos podem abrir por ação do usuário; fontes vazias não geram referências inventadas. Data da geração usa o fuso do dispositivo; modelo e versão do prompt ficam em uma área técnica recolhível. Testes puros cobrem classificação de fallback, decisões, motivos, URLs, preservação do risco e contingência local. Gemini/RAG reais, persistência/reuso, indisponibilidade do provedor, timeout, navegação, leitor de tela e abertura de fontes ainda exigem validação com backend real em Android/iOS.
+O backend usa por padrão chat `gemini-3.5-flash-lite`, embedding `gemini-embedding-001` e 768 dimensões. As variáveis `APP_AI_ENABLED`, `AI_CHAT_MODEL`, `AI_EMBEDDING_MODEL`, `AI_EMBEDDING_DIMENSIONS`, `AI_CALL_TIMEOUT=PT90S` e `AI_PROCESSING_TIMEOUT=PT5M` pertencem ao processo Java. `GOOGLE_API_KEY` fica somente no ambiente seguro do backend, obrigatória quando a IA está habilitada; nunca deve ser colocada no projeto Expo ou em `EXPO_PUBLIC_*`. Os quatro documentos e vetores existentes não devem ser reingeridos quando modelo/dimensão/checksum permanecerem iguais.
+
+O serviço grava guidance sob transação e lock por proprietário. O risco vem sempre de `result.riskLevel`, incluindo quando o modelo sugerir outro valor. Falhas produzem os motivos `PROVIDER_UNAVAILABLE`, `CALL_TIMEOUT`, `NO_RELEVANT_SOURCES`, `INVALID_STRUCTURED_OUTPUT` ou `INSUFFICIENT_CONTEXT`; o fallback não transforma o estado em orientação válida. O timeout exclusivo de 180 s e a ausência de retry automático no mobile foram preservados. Cotas da camada gratuita podem impedir a geração; consulte os [limites oficiais](https://ai.google.dev/gemini-api/docs/rate-limits).
+
+Para validação real, inicie a API Java com chave segura, confirme health e faça uma única diagnóstica estruturada do modelo. Somente se ela funcionar, envie um POST sem body em `/api/risk-jobs/11/guidance` e consulte o mesmo job por GET. Limite: duas gerações de chat e um embedding de consulta, sem reingestão, recriação de job ou mudança do alerta. Confira guidance persistida, risco CRITICAL e alerta OPEN. Se a diagnóstica falhar, pare e registre o HTTP, sem repetir chamadas.
+
+Resumo, sinais, recomendação, ações, avisos e fontes são texto simples. Somente links HTTP(S) válidos podem abrir por ação do usuário; fontes vazias não geram referências inventadas. Data da geração usa o fuso do dispositivo; modelo e versão do prompt ficam em uma área técnica recolhível. Testes puros cobrem classificação de fallback, decisões, motivos, URLs, preservação do risco e contingência local. A validação HTTP real confirmou Gemini/RAG e guidance válida persistida no job #11, com risco CRITICAL e alerta OPEN preservados; fallback, reuso, indisponibilidade e timeout têm cobertura automatizada no backend. Evidências e JSON sanitizado: [integração final de IA](docs/integracao-ia-final.md). A interação no aplicativo, navegação, leitor de tela e abertura de fontes em Android/iOS permanecem pendentes de validação manual.
 
 ## Variáveis de ambiente
 
@@ -190,10 +198,10 @@ cp .env.example .env
 
 ```dotenv
 EXPO_PUBLIC_API_URL=http://10.0.2.2:8080
-EXPO_PUBLIC_COMMIT_HASH=development
+EXPO_PUBLIC_COMMIT_HASH=
 ```
 
-`EXPO_PUBLIC_API_URL` é a origem do backend, **sem `/api` no final**. Os services incluem `/api` em seus caminhos. Sem URL configurada, o aplicativo informa o ajuste necessário ao tentar autenticar. O hash é exibido com no máximo 10 caracteres, inclusive o valor padrão `development`.
+`EXPO_PUBLIC_API_URL` é a origem do backend, **sem `/api` no final**. Os services incluem `/api` em seus caminhos. Sem URL configurada ou com endereço inválido, o aplicativo informa o ajuste necessário ao tentar autenticar. `EXPO_PUBLIC_COMMIT_HASH` é opcional: informe a referência entregue para exibir até 10 caracteres em Sobre o App; vazio exibe **Não informado**. O aplicativo não executa Git.
 
 As variáveis `EXPO_PUBLIC_*` são incluídas no aplicativo: não coloque nelas senhas nem segredos do backend. O arquivo `.env` é ignorado pelo Git. Após mudar essas variáveis, reinicie o Expo e recarregue o aplicativo.
 
@@ -218,6 +226,8 @@ O projeto mantém Continuous Native Generation: não é necessário criar ou edi
 4. Execute `npx expo start` e leia o QR code com Expo Go compatível com SDK 58, ou use uma development build compatível.
 
 No celular, `localhost` aponta para o próprio aparelho e `10.0.2.2` é específico do emulador Android. O túnel do Metro não publica o backend automaticamente. Para uma API remota, configure sua URL HTTPS; a aceitação de HTTP em binários próprios depende da configuração nativa de rede.
+
+Se o Metro anunciar o IP de uma VPN ou de outra interface, defina `REACT_NATIVE_PACKAGER_HOSTNAME` com o IP LAN do notebook no ambiente do processo e execute `npx expo start --clear --lan`.
 
 ## Estrutura de pastas
 
@@ -260,7 +270,17 @@ node --experimental-strip-types --test tests/*.test.mjs
 
 Não há script de lint configurado no projeto. Os testes utilitários usam Node.js 22, o TypeScript e o Axios já disponíveis, sem instalar um framework adicional. A validação completa de SecureStore, teclado, acessibilidade, navegação e autenticação depende de execução em Android/iOS e de uma API real implementando o contrato acima.
 
+A auditoria final de código, os resultados da validação e a lista de alterações desta etapa estão em [docs/auditoria-final-codigo.md](docs/auditoria-final-codigo.md). Nessa auditoria não foram executados lint, testes Google, chamadas à conta de auditoria ou alterações em dados permanentes.
+
 As verificações cobrem funções puras de autenticação e dos módulos agrícolas, incluindo validação numérica, coordenadas, datas, traduções, conflitos e normalização do dashboard. Na etapa 8, somente o patch do Expo foi atualizado para 58.0.25; nenhuma biblioteca nova foi adicionada. Expo Doctor, prebuild e build nativo não fazem parte das verificações.
+
+## Auditoria de qualidade — etapa 11
+
+A auditoria consultou a API real e deixou o cenário **DEMO-GS** identificado como demonstração, sem alterar registros anteriores da conta. Foram verificados CRUDs, paginação, validações, arquivamento/reativação, saúde, leituras, dashboard e dois RiskJobs com resultado determinístico. Um alerta foi resolvido e outro permaneceu aberto. A orientação retornou contingência por indisponibilidade do provedor; o resultado foi preservado e não houve repetição automática do POST. Dados de auditoria foram informados manualmente, sem usar rotas de simulação.
+
+Foram corrigidos o payload de chuva sem data explícita, o limite numérico de chuva, invalidações de cache, formatação de valores ausentes, rótulos técnicos e a configuração de exemplo. A matriz de resultados, IDs preservados, correções e bloqueios está em [docs/auditoria-etapa-11.md](docs/auditoria-etapa-11.md). A automação visual foi encerrada definitivamente. Interface, navegação, teclado, temas, acessibilidade, fontes e botões permanecem pendentes de validação manual pelo usuário.
+
+Antes de EAS Build ou Firebase App Distribution, ainda é necessário concluir a bateria visual em um cliente compatível com SDK 58, decidir nome final e identificadores Android/iOS, fornecer os dados reais da equipe quando aplicável e definir assinatura/contas de distribuição. EAS, Firebase e builds não foram configurados ou executados nesta auditoria.
 
 ## Módulos planejados
 

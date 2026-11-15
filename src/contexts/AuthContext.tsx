@@ -159,7 +159,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     const interceptor = api.interceptors.response.use(response => response, (error: unknown) => {
       if (isAxiosError(error) && isUnauthorized(error) && session && isSessionCurrent(session)) {
-        // Only expire the session responsible for this protected request.
         const authorization = error.config?.headers?.Authorization;
         if (authorization === `Bearer ${session.token}`) void signOut().catch(() => undefined);
       }

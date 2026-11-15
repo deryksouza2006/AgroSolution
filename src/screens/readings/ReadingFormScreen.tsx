@@ -65,7 +65,6 @@ export function ReadingFormScreen({ route, navigation }: Props) {
     if (!values.sensorId || checking || blocked) return;
     setChecking(true);
     try {
-      // A refreshed sensor may point to another crop area; its query will load that destination.
       await Promise.allSettled([sensorQuery.refetch(), ...(sensor ? [areaQuery.refetch()] : [])]);
     } finally { if (mounted.current) setChecking(false); }
   };
@@ -127,11 +126,11 @@ export function ReadingFormScreen({ route, navigation }: Props) {
       value={values[field]} onChangeText={value => change(field, value)} error={errors[field]} editable={!blocked}
       keyboardType={field === 'temperatureCelsius' ? 'numbers-and-punctuation' : 'decimal-pad'} autoCorrect={false} maxLength={32}
       hint={field === 'temperatureCelsius' ? 'De -50 a 70 °C. Use vírgula ou ponto, até 3 casas decimais.'
-        : field === 'rainfallMillimeters' ? 'Mínimo 0 mm. Informe também o início do intervalo de chuva.' : 'De 0 a 100%. Use vírgula ou ponto, até 3 casas decimais.'} />)}
+        : field === 'rainfallMillimeters' ? 'De 0 a 999999,999 mm. Informe também o início do intervalo de chuva.' : 'De 0 a 100%. Use vírgula ou ponto, até 3 casas decimais.'} />)}
     {weather && <Text style={[theme.typography.body, { color: theme.colors.textSecondary }]}>Informe pelo menos uma medição: temperatura, umidade do ar, umidade do solo ou chuva. A bateria é opcional.</Text>}
     <AppInput label="Data da medição (opcional)" value={values.measuredDate} onChangeText={value => change('measuredDate', value)} error={errors.measuredDate}
       editable={!blocked} placeholder="DD/MM/AAAA" keyboardType="numbers-and-punctuation" autoCorrect={false} maxLength={10}
-      hint="Use o fuso do dispositivo. Se data e horário ficarem vazios, a API usará o horário atual." />
+      hint="Use o fuso do dispositivo. Campos vazios usam o horário atual; para chuva, o aplicativo envia esse instante junto com o intervalo." />
     <AppInput label="Horário da medição (opcional)" value={values.measuredTime} onChangeText={value => change('measuredTime', value)} error={errors.measuredTime}
       editable={!blocked} placeholder="HH:mm" keyboardType="numbers-and-punctuation" autoCorrect={false} maxLength={12}
       hint="HH:mm ou HH:mm:ss. Preencha junto com a data. Limite de 5 minutos no futuro." />

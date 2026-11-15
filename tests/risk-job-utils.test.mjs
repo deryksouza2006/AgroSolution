@@ -29,7 +29,6 @@ test('polling is limited to sixty seconds and never allowed off screen or while 
   for (const now of [61000, 61001, 120000]) assert.equal(shouldPollRiskJob('PROCESSING', 1000, now, true), false);
   assert.equal(shouldPollRiskJob('PROCESSING', 1000, 1500, false), false);
   assert.equal(shouldPollRiskJob('PROCESSING', 1000, 1500, true, true), false);
-  // A manual consultation or return to the app does not renew the elapsed budget.
   assert.equal(shouldPollRiskJob('QUEUED', 1000, 80000, true), false);
 });
 

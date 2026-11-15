@@ -81,7 +81,6 @@ function ActivityForm({ navigation, cropAreaId, initialActivity, access, loadErr
     setErrors({});
     submitting.current = true;
     Keyboard.dismiss();
-    // Preserve the original Instant if the local date/time was not changed.
     if (initialActivity && values.date === initialValues.date && values.time === initialValues.time) result.data.performedAt = initialActivity.performedAt;
     try {
       const activity = initialActivity

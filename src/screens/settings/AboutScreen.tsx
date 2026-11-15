@@ -4,7 +4,7 @@ import { ScreenContainer } from '../../components/ScreenContainer';
 import { BrandMark } from '../../components/navigation/BrandMark';
 import { useTheme } from '../../hooks/useTheme';
 
-const commit = (process.env.EXPO_PUBLIC_COMMIT_HASH?.trim() || 'development').slice(0, 10);
+const commit = process.env.EXPO_PUBLIC_COMMIT_HASH?.trim().slice(0, 10) || 'Não informado';
 const technologies = ['Expo SDK 58', 'React Native', 'TypeScript', 'Spring Boot', 'PostgreSQL', 'RabbitMQ', 'Spring AI', 'Gemini', 'RAG com PGVector'];
 
 export function AboutScreen() {
@@ -12,7 +12,7 @@ export function AboutScreen() {
   return (
     <ScreenContainer bottomSafeArea>
       <BrandMark />
-      <Text style={[theme.typography.body, { color: theme.colors.textSecondary }]}>Aplicativo do projeto CitizenTech. O nome “Monitoramento agrícola” é provisório.</Text>
+      <Text style={[theme.typography.body, { color: theme.colors.textSecondary }]}>Aplicativo AgroConecta.</Text>
       <View style={{ gap: theme.spacing.md }}>
         <Text selectable style={[theme.typography.body, { color: theme.colors.text }]}>Versão: {Constants.expoConfig?.version ?? 'Não informada'}</Text>
         <Text selectable style={[theme.typography.body, { color: theme.colors.text }]}>Referência do código: {commit}</Text>

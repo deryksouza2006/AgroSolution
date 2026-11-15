@@ -21,7 +21,6 @@ export function useRiskJobCache() {
     void client.invalidateQueries({ queryKey: cropAreaKeys.lists() });
     if (cropAreaId) void client.invalidateQueries({ queryKey: cropAreaKeys.detail(cropAreaId) });
     else void client.invalidateQueries({ queryKey: cropAreaKeys.all });
-    // PATCH has no response body: obtain the authoritative administrative state with GET.
     await client.invalidateQueries({ queryKey: alertKeys.detail(jobId), exact: true });
     if (!created && isSessionCurrent(session)) {
       const state = client.getQueryState<RiskJob>(alertKeys.detail(jobId));

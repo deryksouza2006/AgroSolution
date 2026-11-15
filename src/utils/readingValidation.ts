@@ -25,9 +25,9 @@ export function validateReadingForm(values: ReadingFormValues, type: SensorType 
     if (!values[key].trim()) continue;
     const number = parseReadingNumber(values[key]);
     const min = key === 'temperatureCelsius' ? -50 : 0;
-    const max = key === 'temperatureCelsius' ? 70 : key === 'rainfallMillimeters' ? Infinity : 100;
+    const max = key === 'temperatureCelsius' ? 70 : key === 'rainfallMillimeters' ? 999_999.999 : 100;
     if (number === null || number < min || number > max) errors[key] = key === 'rainfallMillimeters'
-      ? 'Informe chuva maior ou igual a 0, com até 3 casas decimais e sem perda de precisão.'
+      ? 'Informe chuva entre 0 e 999999,999 mm, com até 3 casas decimais.'
       : `Informe um valor entre ${min} e ${max}, com até 3 casas decimais.`;
   }
   const hasDate = Boolean(values.measuredDate.trim()), hasTime = Boolean(values.measuredTime.trim());
@@ -70,6 +70,7 @@ export function toReadingRequest(values: ReadingFormValues, type: SensorType | u
   const measuredAt = localDateTimeToISO(values.measuredDate, values.measuredTime);
   if (measuredAt) data.measuredAt = measuredAt;
   if (type === 'WEATHER_STATION' && data.rainfallMillimeters !== undefined) {
+    if (!data.measuredAt) data.measuredAt = new Date(now).toISOString();
     const start = localDateTimeToISO(values.rainfallStartDate, values.rainfallStartTime);
     if (start) data.rainfallIntervalStart = start;
   }

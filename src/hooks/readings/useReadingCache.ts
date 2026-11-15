@@ -3,6 +3,7 @@ import { useAuth } from '../auth/useAuth';
 import { sensorKeys } from '../sensors/sensorKeys';
 import type { Reading } from '../../types/reading';
 import { readingKeys } from './readingKeys';
+import { dashboardKeys } from '../dashboard/dashboardKeys';
 
 export function useReadingCache() {
   const client = useQueryClient();
@@ -19,8 +20,8 @@ export function useReadingCache() {
     if (result) client.setQueryData(readingKeys.detail(reading.id), result);
     else client.removeQueries({ queryKey: readingKeys.detail(reading.id), exact: true });
     void client.invalidateQueries({ queryKey: readingKeys.lists() });
-    // A sensor may have been transferred since this reading was recorded.
     void client.invalidateQueries({ queryKey: [...readingKeys.all, 'latest'] });
     void client.invalidateQueries({ queryKey: sensorKeys.health(reading.sensorId) });
+    void client.invalidateQueries({ queryKey: dashboardKeys.all });
   };
 }

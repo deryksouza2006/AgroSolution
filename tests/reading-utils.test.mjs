@@ -80,13 +80,21 @@ test('rain including zero requires a complete interval strictly before the measu
   assert.ok(validateReadingForm({ ...values, ...rainFields(now - 1000) }, 'WEATHER_STATION', now).rainfallMillimeters);
 });
 
-test('rain with omitted measurement time compares its interval to the current time and preserves omission', () => {
+test('rain with omitted measurement time sends the validated current instant required by the API', () => {
   const result = toReadingRequest({ ...values, rainfallMillimeters: '0', ...rainFields(now - 1000) }, 'WEATHER_STATION', now);
   assert.equal(result.valid, true);
   assert.equal(result.data.rainfallMillimeters, 0);
   assert.equal(result.data.rainfallIntervalStart, new Date(now - 1000).toISOString());
-  assert.equal(Object.hasOwn(result.data, 'measuredAt'), false);
+  assert.equal(result.data.measuredAt, new Date(now).toISOString());
   assert.ok(validateReadingForm({ ...values, rainfallMillimeters: '1', ...rainFields(now) }, 'WEATHER_STATION', now).rainfallStartTime);
+});
+
+test('rain respects the six integer digits accepted by the API without rounding', () => {
+  const input = { ...values, rainfallMillimeters: '999999,999', ...rainFields(now - 1000) };
+  assert.equal(toReadingRequest(input, 'WEATHER_STATION', now).data.rainfallMillimeters, 999999.999);
+  for (const value of ['1000000', '1000000,001', '999999,9991']) {
+    assert.ok(validateReadingForm({ ...input, rainfallMillimeters: value }, 'WEATHER_STATION', now).rainfallMillimeters);
+  }
 });
 
 test('local measurement and rain times are converted to UTC using existing date helpers', () => {

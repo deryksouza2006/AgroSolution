@@ -13,7 +13,6 @@ function record(value: unknown): value is Record<string, unknown> {
 function message(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined;
   const text = value.trim();
-  // Reject common diagnostic payloads instead of rendering server internals.
   if (!text || text.length > 500 || /(?:\bat\s+[\w.$]+\([^)]*:\d+|stacktrace|exception|<html|\bselect\b.+\bfrom\b|\b(?:Bearer|eyJ)\s*\S+)/i.test(text)) return undefined;
   return text;
 }

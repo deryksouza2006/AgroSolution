@@ -3,6 +3,9 @@ import { useAuth } from '../auth/useAuth';
 import { farmKeys } from '../farms/farmKeys';
 import type { CropArea } from '../../types/cropArea';
 import { cropAreaKeys } from './cropAreaKeys';
+import { dashboardKeys } from '../dashboard/dashboardKeys';
+import { sensorKeys } from '../sensors/sensorKeys';
+import { readingKeys } from '../readings/readingKeys';
 
 export function useCropAreaCache() {
   const client = useQueryClient();
@@ -16,6 +19,9 @@ export function useCropAreaCache() {
     else void client.invalidateQueries({ queryKey: cropAreaKeys.detail(id) });
     void client.invalidateQueries({ queryKey: cropAreaKeys.lists() });
     void client.invalidateQueries({ queryKey: farmKeys.lists() });
+    void client.invalidateQueries({ queryKey: sensorKeys.all });
+    void client.invalidateQueries({ queryKey: readingKeys.all });
+    void client.invalidateQueries({ queryKey: dashboardKeys.all });
     for (const farmId of new Set([...farmIds, ...(result ? [result.farmId] : [])])) {
       void client.invalidateQueries({ queryKey: farmKeys.detail(farmId) });
     }

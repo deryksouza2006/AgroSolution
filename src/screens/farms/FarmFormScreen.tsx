@@ -60,7 +60,6 @@ function FarmForm({ navigation, initialFarm, loadError, onRetryLoad }: {
     ], { cancelable: true, onDismiss: () => { confirming.current = false; } });
   });
 
-  // Wait for the successful render to disable the unsaved-changes guard.
   useEffect(() => {
     if (!savedFarm) return;
     if (initialFarm) navigation.popTo('FarmDetails', { id: savedFarm.id });

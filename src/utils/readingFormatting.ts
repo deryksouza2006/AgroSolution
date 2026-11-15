@@ -10,12 +10,16 @@ export function formatReadingValue(value: number | null, field: MeasurementField
   return value === null || !Number.isFinite(value) ? 'Não informada' : `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 }).format(value)} ${readingMeasurementUnits[field]}`;
 }
 export function formatReadingSource(source: ReadingSource): string {
-  return ({ MANUAL: 'Manual', DEVICE: 'Dispositivo IoT', SIMULATED: 'Simulada' } as const)[source] ?? 'Origem indisponível';
+  const labels = { MANUAL: 'Manual', DEVICE: 'Dispositivo IoT', SIMULATED: 'Simulada' };
+  return Object.hasOwn(labels, source) ? labels[source] : 'Origem indisponível';
 }
 export function isSimulatedReading(reading: Pick<Reading, 'source'>): boolean { return reading.source === 'SIMULATED'; }
 export function formatReadingAnalysisStatus(status: string): string {
   if (status === 'ANALYZED') return 'Processamento concluído';
   if (status === 'PENDING_PUBLICATION') return 'Aguardando publicação';
+  if (status === 'RECORDED') return 'Registrada';
+  if (status === 'QUEUED_FOR_ANALYSIS') return 'Na fila de processamento';
+  if (status === 'FAILED') return 'Falha no processamento';
   return 'Estado técnico não reconhecido';
 }
 export function readingScopeTitle(scope: ReadingScope): string {

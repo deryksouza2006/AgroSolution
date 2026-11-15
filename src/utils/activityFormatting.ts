@@ -4,9 +4,9 @@ const labels: Record<ActivityType, string> = {
   IRRIGATION: 'Irrigação', FERTILIZATION: 'Fertilização', PLANTING: 'Plantio', HARVEST: 'Colheita',
 };
 export function formatActivityType(type: ActivityType): string {
-  return labels[type] ?? 'Tipo indisponível';
+  return Object.hasOwn(labels, type) ? labels[type] : 'Tipo indisponível';
 }
 export function formatActivityQuantity(quantity: number | null, unit: string | null): string {
-  if (quantity === null || !unit) return 'Não informada';
+  if (typeof quantity !== 'number' || !Number.isFinite(quantity) || !unit) return 'Não informada';
   return `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 }).format(quantity)} ${unit}`;
 }
