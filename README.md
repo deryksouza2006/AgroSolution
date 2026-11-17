@@ -154,7 +154,6 @@ src/
 ├── types/         contratos TypeScript
 └── utils/         validações e formatações
 
-tests/             testes utilitários e de regressão
 ```
 
 O fluxo de acesso aos dados segue esta sequência:
@@ -197,21 +196,12 @@ npx expo start
 
 No celular físico, o aparelho e o computador devem estar na mesma rede. Para acessar uma API local pelo emulador Android, utilize `http://10.0.2.2:8080`.
 
-## Testes e verificações
+## Verificações
 
 ```bash
-node --test tests/*.test.mjs
 npx tsc --noEmit
 npx expo install --check
 ```
-
-Resultado da última validação:
-
-- 105 testes aprovados.
-- TypeScript sem erros.
-- Dependências compatíveis com o Expo SDK 58.
-
-Os testes cobrem validações, datas, medições, conflitos, autenticação, dashboard, análises, alertas e tratamento das orientações.
 
 ## Limitações
 
