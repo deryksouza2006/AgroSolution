@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "AgroConecta",
-    "slug": "citizentech-mobile",
+    "slug": "agroconecta",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,6 +10,8 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "br.com.deryksouza.agroconecta",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -26,6 +28,12 @@
       "expo-status-bar",
       "expo-system-ui",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a46cdbbf-424d-433c-88ff-50b3c296d3ba"
+      }
+    },
+    "owner": "deryksouza2006"
   }
 }
