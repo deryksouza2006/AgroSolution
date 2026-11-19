@@ -8,19 +8,19 @@ O AgroConecta auxilia pequenos produtores no acompanhamento de propriedades, tal
 
 | Recurso | Link |
 | --- | --- |
-| Repositório mobile |  |
+| Repositório mobile | [AgroConecta](https://github.com/deryksouza2006/AgroSolution.git)  |
 | Repositório da API | [GS-FINAL](https://github.com/deryksouza2006/GS-FINAL) |
-| API publicada |  |
-| Vídeo de apresentação |  |
+| API publicada | [agroconecta-api-ms1a.onrender.com](https://agroconecta-api-ms1a.onrender.com/) |
+| Vídeo de apresentação | [Link do video](https://github.com/deryksouza2006/AgroSolution.git) |
 
 ## Integrantes
 
 | Nome | RM |
-| --- | --- |
-|  |  |
-|  |  |
-|  |  |
-|  |  |
+|---|---|
+| Lucas Gonçalves Viana | 563254 |
+| Deryk de Souza Queiroz | 563412 |
+| Vinicius Paschoeto da Silva | 563089 |
+| Felipe Wiclif Leal da Silva| 563901 |
 
 ## O projeto
 
