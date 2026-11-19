@@ -11,7 +11,7 @@ O AgroConecta auxilia pequenos produtores no acompanhamento de propriedades, tal
 | Repositório mobile | [AgroConecta](https://github.com/deryksouza2006/AgroSolution.git)  |
 | Repositório da API | [GS-FINAL](https://github.com/deryksouza2006/GS-FINAL) |
 | API publicada | [agroconecta-api-ms1a.onrender.com](https://agroconecta-api-ms1a.onrender.com/) |
-| Vídeo de apresentação | [Link do video](https://github.com/deryksouza2006/AgroSolution.git) |
+| Vídeo de apresentação | [Link do video](https://youtube.com/shorts/2kf54CPJGg0) |
 
 ## Integrantes
 
